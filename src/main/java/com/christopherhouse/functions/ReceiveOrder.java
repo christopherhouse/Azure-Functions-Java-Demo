@@ -3,6 +3,7 @@ package com.christopherhouse.functions;
 import java.util.*;
 
 import com.christopherhouse.functions.models.*;
+import com.christopherhouse.functions.services.OrderValidation;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
@@ -21,10 +22,21 @@ public class ReceiveOrder{
         OrderRequest orderRequest = null;
         try {
             orderRequest = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, OrderRequest.class);
-            OrderConfirmation confirmation = createConfirmation(orderRequest);
+            OrderConfirmation confirmation;
+
+            if (orderIsValid(orderRequest)) {
+                confirmation = createConfirmation(orderRequest);
+
+            }
+            else {
+                confirmation = new OrderConfirmation();
+                confirmation.setOrderStatus(OrderStatus.INVALID);
+            }
+
             response = request.createResponseBuilder(HttpStatus.OK)
                     .body(confirmation)
                     .build();
+
         } catch (Exception e) {
             context.getLogger().severe("Failed to deserialize order request: " + e.getMessage());
             response = request.createResponseBuilder(HttpStatus.BAD_REQUEST)
@@ -33,6 +45,18 @@ public class ReceiveOrder{
         }
 
         return response;
+    }
+
+    private static boolean orderIsValid(OrderRequest orderRequest) {
+        boolean result = false;
+
+        try {
+            result = OrderValidation.isValidOrder(orderRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     private static OrderConfirmation createConfirmation(OrderRequest request) {

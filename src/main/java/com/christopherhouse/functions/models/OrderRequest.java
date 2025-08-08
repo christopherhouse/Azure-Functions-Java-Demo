@@ -3,19 +3,43 @@ package com.christopherhouse.functions.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.constraints.*;
+
 public class OrderRequest {
 
+    @NotNull
     private String customerName;
+
+    @NotNull
+    @Email
     private String customerEmail;
+
+    @NotNull
     private String customerPhone;
+
+    @NotNull
     private String shippingAddress;
+
     private String billingAddress;
+
+    @NotNull
     private String paymentMethod;
+
+    @NotNull
     private String orderDate;
+
+    @NotNull
     private String orderStatus;
+
+    @NotNull
     private String orderId;
+
+    @NotEmpty
     private List<LineItem> lineItems; // List of products in the order
+
     private String specialInstructions;
+
+    @NotNull
     private String customerId; // Unique identifier for the customer
 
     public OrderRequest() {
