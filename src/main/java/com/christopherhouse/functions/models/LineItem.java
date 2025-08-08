@@ -1,9 +1,21 @@
 package com.christopherhouse.functions.models;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
 public class LineItem {
+
+    @NotNull
     private String productId;
+
+    @NotNull
     private String productName;
+
+    @Min(1)
     private int quantity;
+
+    @DecimalMin("0.01")
     private double unitPrice;
 
     public LineItem() {
