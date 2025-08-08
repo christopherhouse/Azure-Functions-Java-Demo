@@ -21,8 +21,9 @@ public class ReceiveOrder{
         OrderRequest orderRequest = null;
         try {
             orderRequest = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, OrderRequest.class);
+            OrderConfirmation confirmation = createConfirmation(orderRequest);
             response = request.createResponseBuilder(HttpStatus.OK)
-                    .body(orderRequest)
+                    .body(confirmation)
                     .build();
         } catch (Exception e) {
             context.getLogger().severe("Failed to deserialize order request: " + e.getMessage());
@@ -32,5 +33,21 @@ public class ReceiveOrder{
         }
 
         return response;
+    }
+
+    private static OrderConfirmation createConfirmation(OrderRequest request) {
+        double totalAmount = request.getLineItems().stream()
+                .mapToDouble(LineItem::getTotalPrice)
+                .sum();
+
+        OrderConfirmation confirmation = new OrderConfirmation();
+        confirmation.setOrderId(request.getOrderId());
+        confirmation.setCustomerName(request.getCustomerName());
+        confirmation.setCustomerEmail(request.getCustomerEmail());
+        confirmation.setOrderDate(request.getOrderDate());
+        confirmation.setOrderStatus(OrderStatus.RECEIVED);
+        confirmation.setTotalAmount(totalAmount);
+
+        return confirmation;
     }
 }
