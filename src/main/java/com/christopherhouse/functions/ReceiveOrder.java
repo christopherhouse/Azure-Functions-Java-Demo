@@ -4,9 +4,7 @@ import java.util.*;
 
 import com.christopherhouse.functions.models.*;
 import com.christopherhouse.functions.services.OrderValidation;
-import com.microsoft.azure.functions.annotation.AuthorizationLevel;
-import com.microsoft.azure.functions.annotation.FunctionName;
-import com.microsoft.azure.functions.annotation.HttpTrigger;
+import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
 
 public class ReceiveOrder{
@@ -14,6 +12,7 @@ public class ReceiveOrder{
     @FunctionName("ReceiveOrder")
     public HttpResponseMessage run(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
+            @ServiceBusQueueOutput(name = "message", queueName = "received-orders", connection = "serviceBusConnectionString") OutputBinding<OrderRequest> message,
             final ExecutionContext context) {
         HttpResponseMessage response;
         context.getLogger().info("Received an order request.");
@@ -27,6 +26,7 @@ public class ReceiveOrder{
             if (orderIsValid(orderRequest)) {
                 confirmation = createConfirmation(orderRequest);
 
+                message.setValue(orderRequest);
             }
             else {
                 confirmation = new OrderConfirmation();
