@@ -101,7 +101,6 @@ Since local runtime requires internet connectivity, test HTTP functions by:
 ├── pom.xml                           # Maven build configuration
 ├── host.json                         # Azure Functions host configuration  
 ├── src/main/java/com/christopherhouse/functions/
-│   ├── HttpTriggerJava.java          # Simple HTTP trigger function
 │   ├── ReceiveOrder.java             # Order processing HTTP trigger with Service Bus output
 │   ├── models/                       # Data models
 │   │   ├── OrderRequest.java         # Order request model with validation
@@ -156,7 +155,6 @@ The application requires a `serviceBusConnectionString` setting in `local.settin
 
 ### Function Endpoints
 When running locally (with internet connectivity):
-- HttpTriggerJava: `GET/POST http://localhost:7071/api/HttpTriggerJava`
 - ReceiveOrder: `POST http://localhost:7071/api/ReceiveOrder`
 
 ### Validation Scenarios
@@ -167,7 +165,6 @@ Always test these scenarios after making changes:
 4. **Build process**: Ensure `mvn package` completes without errors and generates Azure Functions runtime artifacts
 
 ### Architecture Notes
-- **HttpTriggerJava**: Simple demonstration function accepting name parameter
 - **ReceiveOrder**: Production-style function accepting OrderRequest JSON, validating it, and forwarding to Service Bus queue
 - **Validation**: Uses Jakarta Bean Validation with Hibernate Validator for request validation
 - **Models**: Well-structured POJOs with proper getters/setters and validation annotations
