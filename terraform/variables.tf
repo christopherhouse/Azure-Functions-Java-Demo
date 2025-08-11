@@ -58,9 +58,9 @@ variable "monitoring_config" {
   type = object({
     log_analytics = object({
       retention_in_days = number
-      sku              = string
+      sku               = string
     })
-    
+
     application_insights = object({
       application_type              = string
       retention_in_days             = number
@@ -73,19 +73,19 @@ variable "monitoring_config" {
 variable "storage_config" {
   description = "Configuration for the storage account"
   type = object({
-    account_tier                = string
-    account_replication_type    = string
-    min_tls_version             = string
-    https_traffic_only_enabled  = bool
+    account_tier                  = string
+    account_replication_type      = string
+    min_tls_version               = string
+    https_traffic_only_enabled    = bool
     public_network_access_enabled = bool
-    shared_access_key_enabled   = bool
-    
+    shared_access_key_enabled     = bool
+
     network_rules = object({
       default_action = string
       bypass         = list(string)
       ip_rules       = list(string)
     })
-    
+
     enable_diagnostic_settings = bool
   })
 }
@@ -93,12 +93,12 @@ variable "storage_config" {
 variable "service_bus_config" {
   description = "Configuration for the Service Bus namespace"
   type = object({
-    enable_telemetry             = bool
-    sku                          = string
-    capacity                     = optional(number)
+    enable_telemetry              = bool
+    sku                           = string
+    capacity                      = optional(number)
     public_network_access_enabled = bool
-    minimum_tls_version          = string
-    
+    minimum_tls_version           = string
+
     topics = map(object({
       max_size_in_megabytes                   = optional(number, 1024)
       requires_duplicate_detection            = optional(bool, false)
@@ -108,7 +108,7 @@ variable "service_bus_config" {
       enable_express                          = optional(bool, false)
       support_ordering                        = optional(bool, false)
       duplicate_detection_history_time_window = optional(string, "PT10M")
-      
+
       subscriptions = optional(map(object({
         max_delivery_count                        = optional(number, 10)
         lock_duration                             = optional(string, "PT1M")
@@ -120,7 +120,7 @@ variable "service_bus_config" {
         auto_delete_on_idle                       = optional(string, "P10675199DT2H48M5.4775807S")
       })), {})
     }))
-    
+
     enable_diagnostic_settings = bool
   })
 }
@@ -129,41 +129,41 @@ variable "function_app_config" {
   description = "Configuration for the Function App and App Service Plan"
   type = object({
     app_service_plan = object({
-      os_type                     = string
-      sku_name                    = string
-      worker_count                = optional(number)
-      zone_balancing_enabled      = optional(bool)
-      per_site_scaling_enabled    = optional(bool)
+      os_type                      = string
+      sku_name                     = string
+      worker_count                 = optional(number)
+      zone_balancing_enabled       = optional(bool)
+      per_site_scaling_enabled     = optional(bool)
       maximum_elastic_worker_count = optional(number)
     })
-    
+
     function_app = object({
-      os_type                 = string
-      https_only              = bool
-      client_certificate_enabled = bool
-      public_network_access_enabled = bool
-      ftp_publish_basic_authentication_enabled = bool
+      os_type                                        = string
+      https_only                                     = bool
+      client_certificate_enabled                     = bool
+      public_network_access_enabled                  = bool
+      ftp_publish_basic_authentication_enabled       = bool
       webdeploy_publish_basic_authentication_enabled = bool
-      
+
       application_insights_type = string
-      
+
       storage_uses_managed_identity = bool
-      
+
       site_config = object({
-        java_version = string
-        always_on = bool
-        http2_enabled = bool
-        minimum_tls_version = string
-        ftps_state = string
-        allowed_ip_ranges = list(string)
+        java_version                     = string
+        always_on                        = bool
+        http2_enabled                    = bool
+        minimum_tls_version              = string
+        ftps_state                       = string
+        allowed_ip_ranges                = list(string)
         runtime_scale_monitoring_enabled = bool
-        use_32_bit_worker = bool
-        websockets_enabled = bool
-        vnet_route_all_enabled = bool
+        use_32_bit_worker                = bool
+        websockets_enabled               = bool
+        vnet_route_all_enabled           = bool
       })
-      
+
       app_settings = map(string)
-      
+
       enable_diagnostic_settings = bool
     })
   })

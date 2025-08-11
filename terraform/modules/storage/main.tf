@@ -12,7 +12,7 @@ module "storage_account" {
   account_tier             = var.storage_config.account_tier
   account_replication_type = var.storage_config.account_replication_type
   min_tls_version          = var.storage_config.min_tls_version
-  
+
   # Enable secure access
   https_traffic_only_enabled    = var.storage_config.https_traffic_only_enabled
   public_network_access_enabled = var.storage_config.public_network_access_enabled

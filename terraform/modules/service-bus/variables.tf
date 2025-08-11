@@ -3,16 +3,16 @@ variable "service_bus_config" {
   type = object({
     name                          = string
     location                      = string
-    resource_group_name          = string
-    enable_telemetry             = bool
-    sku                          = string
-    capacity                     = optional(number)
+    resource_group_name           = string
+    enable_telemetry              = bool
+    sku                           = string
+    capacity                      = optional(number)
     public_network_access_enabled = bool
-    minimum_tls_version          = string
-    
+    minimum_tls_version           = string
+
     # Managed identity configuration
-    user_assigned_resource_ids   = list(string)
-    
+    user_assigned_resource_ids = list(string)
+
     # Topics configuration
     topics = map(object({
       max_size_in_megabytes                   = optional(number, 1024)
@@ -23,7 +23,7 @@ variable "service_bus_config" {
       enable_express                          = optional(bool, false)
       support_ordering                        = optional(bool, false)
       duplicate_detection_history_time_window = optional(string, "PT10M")
-      
+
       subscriptions = optional(map(object({
         max_delivery_count                        = optional(number, 10)
         lock_duration                             = optional(string, "PT1M")
@@ -35,11 +35,11 @@ variable "service_bus_config" {
         auto_delete_on_idle                       = optional(string, "P10675199DT2H48M5.4775807S")
       })), {})
     }))
-    
+
     # Diagnostic settings
     enable_diagnostic_settings = bool
     log_analytics_workspace_id = string
-    
+
     tags = map(string)
   })
 }

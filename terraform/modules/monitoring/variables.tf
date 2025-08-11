@@ -11,11 +11,11 @@ variable "monitoring_config" {
       sku                 = string
       tags                = map(string)
     })
-    
+
     # Application Insights configuration
     application_insights = object({
-      name                           = string
-      location                       = string
+      name                          = string
+      location                      = string
       resource_group_name           = string
       enable_telemetry              = bool
       application_type              = string

@@ -32,10 +32,10 @@ module "function_app" {
   enable_telemetry         = var.function_app_config.function_app.enable_telemetry
 
   # Configure Function App settings
-  https_only                           = var.function_app_config.function_app.https_only
-  client_certificate_enabled          = var.function_app_config.function_app.client_certificate_enabled
-  public_network_access_enabled        = var.function_app_config.function_app.public_network_access_enabled
-  ftp_publish_basic_authentication_enabled    = var.function_app_config.function_app.ftp_publish_basic_authentication_enabled
+  https_only                                     = var.function_app_config.function_app.https_only
+  client_certificate_enabled                     = var.function_app_config.function_app.client_certificate_enabled
+  public_network_access_enabled                  = var.function_app_config.function_app.public_network_access_enabled
+  ftp_publish_basic_authentication_enabled       = var.function_app_config.function_app.ftp_publish_basic_authentication_enabled
   webdeploy_publish_basic_authentication_enabled = var.function_app_config.function_app.webdeploy_publish_basic_authentication_enabled
 
   # Managed identities - both system and user assigned
@@ -54,8 +54,8 @@ module "function_app" {
   }
 
   # Storage account configuration using managed identity
-  storage_account_name          = var.function_app_config.function_app.storage_account_name
-  storage_uses_managed_identity = var.function_app_config.function_app.storage_uses_managed_identity
+  storage_account_name            = var.function_app_config.function_app.storage_account_name
+  storage_uses_managed_identity   = var.function_app_config.function_app.storage_uses_managed_identity
   key_vault_reference_identity_id = var.function_app_config.function_app.key_vault_reference_identity_id
 
   # Site configuration
@@ -66,15 +66,15 @@ module "function_app" {
         java_version = var.function_app_config.function_app.site_config.java_version
       }
     }
-    
+
     # Configure always on (not supported on Consumption plan)
     always_on = var.function_app_config.app_service_plan.sku_name != "Y1" ? var.function_app_config.function_app.site_config.always_on : false
-    
+
     # Security settings
-    http2_enabled        = var.function_app_config.function_app.site_config.http2_enabled
-    minimum_tls_version  = var.function_app_config.function_app.site_config.minimum_tls_version
+    http2_enabled       = var.function_app_config.function_app.site_config.http2_enabled
+    minimum_tls_version = var.function_app_config.function_app.site_config.minimum_tls_version
     ftps_state          = var.function_app_config.function_app.site_config.ftps_state
-    
+
     # Configure IP restrictions if provided
     ip_restriction = length(var.function_app_config.function_app.site_config.allowed_ip_ranges) > 0 ? {
       for idx, ip_range in var.function_app_config.function_app.site_config.allowed_ip_ranges : "rule_${idx}" => {
@@ -89,7 +89,7 @@ module "function_app" {
     runtime_scale_monitoring_enabled = var.function_app_config.app_service_plan.sku_name != "Y1" ? var.function_app_config.function_app.site_config.runtime_scale_monitoring_enabled : false
     use_32_bit_worker                = var.function_app_config.function_app.site_config.use_32_bit_worker
     websockets_enabled               = var.function_app_config.function_app.site_config.websockets_enabled
-    vnet_route_all_enabled          = var.function_app_config.function_app.site_config.vnet_route_all_enabled
+    vnet_route_all_enabled           = var.function_app_config.function_app.site_config.vnet_route_all_enabled
   }
 
   # Application settings for Function App

@@ -24,10 +24,10 @@ module "application_insights" {
   resource_group_name = var.monitoring_config.application_insights.resource_group_name
   enable_telemetry    = var.monitoring_config.application_insights.enable_telemetry
 
-  application_type                = var.monitoring_config.application_insights.application_type
-  workspace_id                   = module.log_analytics.resource.id
-  retention_in_days              = var.monitoring_config.application_insights.retention_in_days
-  disable_ip_masking             = var.monitoring_config.application_insights.disable_ip_masking
+  application_type              = var.monitoring_config.application_insights.application_type
+  workspace_id                  = module.log_analytics.resource.id
+  retention_in_days             = var.monitoring_config.application_insights.retention_in_days
+  disable_ip_masking            = var.monitoring_config.application_insights.disable_ip_masking
   local_authentication_disabled = var.monitoring_config.application_insights.local_authentication_disabled
 
   tags = var.monitoring_config.application_insights.tags

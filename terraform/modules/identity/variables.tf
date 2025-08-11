@@ -6,11 +6,11 @@ variable "identity_config" {
     resource_group_name = string
     enable_telemetry    = bool
     tags                = map(string)
-    
+
     # RBAC assignments configuration
     rbac_assignments = object({
-      service_bus_scope   = string
-      storage_scope       = string
+      service_bus_scope = string
+      storage_scope     = string
     })
   })
 }
