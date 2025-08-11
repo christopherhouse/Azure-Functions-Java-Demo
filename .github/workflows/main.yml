@@ -177,7 +177,7 @@ jobs:
 
   deploy-prod:
     name: Deploy to Production
-    needs: build
+    needs: [build, deploy-dev]
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_dispatch' && inputs.deploy_environment == 'prod')
