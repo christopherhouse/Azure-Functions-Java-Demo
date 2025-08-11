@@ -1,5 +1,5 @@
 # Resource Group Name (must already exist)
-resource_group_name = "<YOUR-PROD-RG-NAME>"
+resource_group_name = "RG-JCI-INT-DEMO-PRD"
 # Production Environment Configuration
 
 # Environment Configuration

@@ -1,5 +1,5 @@
 # Resource Group Name (must already exist)
-resource_group_name = "<YOUR-DEV-RG-NAME>"
+resource_group_name = "RG-JCI-INT-DEMO-DEV"
 # Development Environment Configuration
 
 # Environment Configuration
