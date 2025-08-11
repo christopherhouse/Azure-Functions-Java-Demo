@@ -47,6 +47,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          auth-type: SERVICE_PRINCIPAL
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -59,11 +60,19 @@ jobs:
           chmod +x deploy-ci.sh
           ./deploy-ci.sh ${{ inputs.environment }} apply
         env:
-          TF_IN_AUTOMATION: true
-          ARM_USE_OIDC: true
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+          TF_IN_AUTOMATION: true          
+          # TF_IN_AUTOMATION: true
+          # ARM_USE_OIDC: true
+          # ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          # ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Get Function App Name
         id: function-app
