@@ -173,3 +173,22 @@ variable "function_app_config" {
     })
   })
 }
+
+# Authentication control (local vs CI)
+variable "use_oidc" {
+  description = "When true (default) the Azurerm provider will attempt OIDC federation (used in CI). Set to false locally to use Azure CLI / device code auth."
+  type        = bool
+  default     = true
+}
+
+variable "subscription_id" {
+  description = "Optional explicit subscription id override for the provider. Leave empty to inherit from az cli context."
+  type        = string
+  default     = ""
+}
+
+variable "tenant_id" {
+  description = "Optional explicit tenant id override for the provider. Leave empty to inherit from az cli context."
+  type        = string
+  default     = ""
+}
