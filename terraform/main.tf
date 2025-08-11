@@ -21,337 +21,246 @@ module "resource_group" {
   tags = var.tags
 }
 
-# Log Analytics Workspace for centralized logging
-module "log_analytics" {
-  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version = ">= 0.3.0"
-
-  name                = var.prefix != "" ? "${var.prefix}-${module.naming.log_analytics_workspace.name}" : module.naming.log_analytics_workspace.name
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  log_analytics_workspace_retention_in_days = var.log_analytics_retention_days
-  log_analytics_workspace_sku               = "PerGB2018"
-
-  tags = var.tags
-}
-
-# Application Insights for Function App monitoring
-module "application_insights" {
-  source  = "Azure/avm-res-insights-component/azurerm"
-  version = ">= 0.2.0"
-
-  name                = var.prefix != "" ? "${var.prefix}-${module.naming.application_insights.name}" : module.naming.application_insights.name
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  application_type                = "web"
-  workspace_resource_id          = module.log_analytics.resource.id
-  retention_in_days              = var.application_insights_retention_days
-  disable_ip_masking             = false
-  local_authentication_disabled = false
-
-  tags = var.tags
-}
-
-# User Assigned Managed Identity for Function App
-module "user_assigned_identity" {
-  source  = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
-  version = ">= 0.2.0"
-
-  name                = var.prefix != "" ? "${var.prefix}-${module.naming.user_assigned_identity.name}" : module.naming.user_assigned_identity.name
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  tags = var.tags
-}
-
-# Storage Account for Function App
-module "storage_account" {
-  source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = ">= 0.6.0"
-
-  name                = var.prefix != "" ? "${var.prefix}${module.naming.storage_account.name_unique}" : module.naming.storage_account.name_unique
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  account_kind             = "StorageV2"
-  account_tier             = var.storage_account_tier
-  account_replication_type = var.storage_account_replication_type
-  min_tls_version          = "TLS1_2"
+# Monitoring Module (Log Analytics and Application Insights)
+module "monitoring" {
+  source = "./modules/monitoring"
   
-  # Enable secure access
-  https_traffic_only_enabled    = true
-  public_network_access_enabled = true
-  shared_access_key_enabled     = true
-
-  # Configure managed identity access
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [module.user_assigned_identity.resource.id]
-  }
-
-  # Network rules
-  network_rules = {
-    default_action = "Allow"
-    bypass         = ["AzureServices"]
-    ip_rules       = var.allowed_ip_ranges
-  }
-
-  # Diagnostic settings
-  diagnostic_settings_storage_account = var.enable_diagnostic_settings ? {
-    default = {
-      name                  = "diag-storage"
-      workspace_resource_id = module.log_analytics.resource.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
+  monitoring_config = {
+    log_analytics = {
+      name                = var.prefix != "" ? "${var.prefix}-${module.naming.log_analytics_workspace.name}" : module.naming.log_analytics_workspace.name
+      location            = var.location
+      resource_group_name = module.resource_group.name
+      enable_telemetry    = var.enable_telemetry
+      retention_in_days   = var.monitoring_config.log_analytics.retention_in_days
+      sku                 = var.monitoring_config.log_analytics.sku
+      tags                = var.tags
     }
-  } : {}
-
-  tags = var.tags
-
-  depends_on = [module.user_assigned_identity]
+    
+    application_insights = {
+      name                           = var.prefix != "" ? "${var.prefix}-${module.naming.application_insights.name}" : module.naming.application_insights.name
+      location                       = var.location
+      resource_group_name           = module.resource_group.name
+      enable_telemetry              = var.enable_telemetry
+      application_type              = var.monitoring_config.application_insights.application_type
+      retention_in_days             = var.monitoring_config.application_insights.retention_in_days
+      disable_ip_masking            = var.monitoring_config.application_insights.disable_ip_masking
+      local_authentication_disabled = var.monitoring_config.application_insights.local_authentication_disabled
+      tags                          = var.tags
+    }
+  }
 }
 
-# Service Bus Namespace with topics and subscriptions
+# Identity Module (Managed Identity only - RBAC assignments moved to main)
+module "identity" {
+  source = "./modules/identity"
+  
+  identity_config = {
+    name                = var.prefix != "" ? "${var.prefix}-${module.naming.user_assigned_identity.name}" : module.naming.user_assigned_identity.name
+    location            = var.location
+    resource_group_name = module.resource_group.name
+    enable_telemetry    = var.enable_telemetry
+    tags                = var.tags
+    
+    # RBAC assignments will be handled in main.tf
+    rbac_assignments = {
+      service_bus_scope = ""
+      storage_scope     = ""
+    }
+  }
+}
+
+# Storage Module (Storage Account)
+module "storage" {
+  source = "./modules/storage"
+  
+  storage_config = {
+    name                         = var.prefix != "" ? "${var.prefix}${module.naming.storage_account.name_unique}" : module.naming.storage_account.name_unique
+    location                     = var.location
+    resource_group_name          = module.resource_group.name
+    enable_telemetry            = var.enable_telemetry
+    account_tier                = var.storage_config.account_tier
+    account_replication_type    = var.storage_config.account_replication_type
+    min_tls_version             = var.storage_config.min_tls_version
+    https_traffic_only_enabled  = var.storage_config.https_traffic_only_enabled
+    public_network_access_enabled = var.storage_config.public_network_access_enabled
+    shared_access_key_enabled   = var.storage_config.shared_access_key_enabled
+    
+    user_assigned_resource_ids  = [module.identity.identity_resource_id]
+    
+    network_rules = var.storage_config.network_rules
+    
+    enable_diagnostic_settings = var.storage_config.enable_diagnostic_settings
+    log_analytics_workspace_id = module.monitoring.log_analytics_id
+    
+    tags = var.tags
+  }
+  
+  depends_on = [module.identity]
+}
+
+# Service Bus Module (Service Bus Namespace, Topics, Subscriptions)
 module "service_bus" {
-  source  = "Azure/avm-res-servicebus-namespace/azurerm"
-  version = ">= 0.3.0"
-
-  name                = var.prefix != "" ? "${var.prefix}-${module.naming.servicebus_namespace.name}" : module.naming.servicebus_namespace.name
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  sku                           = var.service_bus_sku
-  capacity                      = var.service_bus_sku == "Premium" ? 1 : null
-  public_network_access_enabled = true
-  minimum_tls_version           = var.minimum_tls_version
-
-  # Configure managed identities
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [module.user_assigned_identity.resource.id]
+  source = "./modules/service-bus"
+  
+  service_bus_config = {
+    name                          = var.prefix != "" ? "${var.prefix}-${module.naming.servicebus_namespace.name}" : module.naming.servicebus_namespace.name
+    location                      = var.location
+    resource_group_name          = module.resource_group.name
+    enable_telemetry             = var.service_bus_config.enable_telemetry
+    sku                          = var.service_bus_config.sku
+    capacity                     = var.service_bus_config.sku == "Premium" ? var.service_bus_config.capacity : null
+    public_network_access_enabled = var.service_bus_config.public_network_access_enabled
+    minimum_tls_version          = var.service_bus_config.minimum_tls_version
+    
+    user_assigned_resource_ids   = [module.identity.identity_resource_id]
+    
+    topics = var.service_bus_config.topics
+    
+    enable_diagnostic_settings = var.service_bus_config.enable_diagnostic_settings
+    log_analytics_workspace_id = module.monitoring.log_analytics_id
+    
+    tags = var.tags
   }
-
-  # Configure topics and subscriptions
-  topics = var.service_bus_topics
-
-  # Diagnostic settings
-  diagnostic_settings = var.enable_diagnostic_settings ? {
-    default = {
-      name                  = "diag-servicebus"
-      workspace_resource_id = module.log_analytics.resource.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : {}
-
-  tags = var.tags
-
-  depends_on = [module.user_assigned_identity]
+  
+  depends_on = [module.identity]
 }
 
-# App Service Plan for Function App
-module "app_service_plan" {
-  source  = "Azure/avm-res-web-serverfarm/azurerm"
-  version = ">= 0.2.0"
-
-  name                = var.prefix != "" ? "${var.prefix}-${module.naming.app_service_plan.name}" : module.naming.app_service_plan.name
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  enable_telemetry    = var.enable_telemetry
-
-  os_type                      = var.function_app_os_type
-  sku_name                     = var.function_app_sku
-  worker_count                 = var.function_app_sku == "Y1" ? null : 1
-  zone_balancing_enabled       = var.function_app_sku != "Y1" ? true : false
-  per_site_scaling_enabled     = false
-  maximum_elastic_worker_count = var.function_app_sku == "Y1" ? null : 10
-
-  tags = var.tags
-}
-
-# Function App
+# Function App Module (App Service Plan and Function App)
 module "function_app" {
-  source  = "Azure/avm-res-web-site/azurerm"
-  version = ">= 0.17.0"
-
-  kind                     = "functionapp"
-  name                     = var.prefix != "" ? "${var.prefix}-${module.naming.function_app.name}" : module.naming.function_app.name
-  location                 = module.resource_group.location
-  resource_group_name      = module.resource_group.name
-  os_type                  = var.function_app_os_type
-  service_plan_resource_id = module.app_service_plan.resource_id
-  enable_telemetry         = var.enable_telemetry
-
-  # Configure Function App settings
-  https_only                           = true
-  client_certificate_enabled          = false
-  public_network_access_enabled        = true
-  ftp_publish_basic_authentication_enabled    = false
-  webdeploy_publish_basic_authentication_enabled = false
-
-  # Managed identities - both system and user assigned
-  managed_identities = {
-    system_assigned            = true
-    user_assigned_resource_ids = [module.user_assigned_identity.resource.id]
-  }
-
-  # Application Insights integration
-  application_insights = {
-    name                  = module.application_insights.resource.name
-    resource_group_name   = module.resource_group.name
-    location              = module.resource_group.location
-    application_type      = "web"
-    workspace_resource_id = module.log_analytics.resource.id
-  }
-
-  # Storage account configuration using managed identity
-  storage_account_name          = module.storage_account.resource.name
-  storage_uses_managed_identity = true
-  key_vault_reference_identity_id = module.user_assigned_identity.resource.id
-
-  # Site configuration
-  site_config = {
-    # Configure the Function App for Java
-    application_stack = {
-      java = {
-        java_version = var.java_version
-      }
+  source = "./modules/function-app"
+  
+  function_app_config = {
+    app_service_plan = {
+      name                         = var.prefix != "" ? "${var.prefix}-${module.naming.app_service_plan.name}" : module.naming.app_service_plan.name
+      location                     = var.location
+      resource_group_name         = module.resource_group.name
+      enable_telemetry            = var.enable_telemetry
+      os_type                     = var.function_app_config.app_service_plan.os_type
+      sku_name                    = var.function_app_config.app_service_plan.sku_name
+      worker_count                = var.function_app_config.app_service_plan.worker_count
+      zone_balancing_enabled      = var.function_app_config.app_service_plan.zone_balancing_enabled
+      per_site_scaling_enabled    = var.function_app_config.app_service_plan.per_site_scaling_enabled
+      maximum_elastic_worker_count = var.function_app_config.app_service_plan.maximum_elastic_worker_count
+      tags                        = var.tags
     }
     
-    # Configure always on (not supported on Consumption plan)
-    always_on = var.function_app_sku != "Y1" ? var.function_app_always_on : false
-    
-    # Security settings
-    http2_enabled        = true
-    minimum_tls_version  = var.minimum_tls_version
-    ftps_state          = "Disabled"
-    
-    # Configure IP restrictions if provided
-    ip_restriction = length(var.allowed_ip_ranges) > 0 ? {
-      for idx, ip_range in var.allowed_ip_ranges : "rule_${idx}" => {
-        action     = "Allow"
-        name       = "Allow_${idx}"
-        priority   = 100 + idx
-        ip_address = ip_range
-      }
-    } : {}
-
-    # Function App specific settings
-    runtime_scale_monitoring_enabled = var.function_app_sku != "Y1" ? true : false
-    use_32_bit_worker                = false
-    websockets_enabled               = false
-    vnet_route_all_enabled          = false
-  }
-
-  # Application settings for Function App
-  app_settings = {
-    FUNCTIONS_WORKER_RUNTIME = "java"
-    FUNCTIONS_EXTENSION_VERSION = "~4"
-    WEBSITE_RUN_FROM_PACKAGE = "1"
-    
-    # Application Insights
-    APPINSIGHTS_INSTRUMENTATIONKEY        = module.application_insights.resource.instrumentation_key
-    APPLICATIONINSIGHTS_CONNECTION_STRING = module.application_insights.resource.connection_string
-    
-    # Service Bus connection using managed identity
-    ServiceBusConnection__fullyQualifiedNamespace = "${module.service_bus.resource.name}.servicebus.windows.net"
-    ServiceBusConnection__credential               = "managedidentity"
-    ServiceBusConnection__clientId                 = module.user_assigned_identity.resource.client_id
-    
-    # Storage account settings
-    AzureWebJobsStorage__accountName = module.storage_account.resource.name
-    AzureWebJobsStorage__credential  = "managedidentity"
-    AzureWebJobsStorage__clientId    = module.user_assigned_identity.resource.client_id
-    
-    # Java specific settings
-    JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
-  }
-
-  # Diagnostic settings
-  diagnostic_settings = var.enable_diagnostic_settings ? {
-    default = {
-      name                  = "diag-functionapp"
-      workspace_resource_id = module.log_analytics.resource.id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
+    function_app = {
+      name                     = var.prefix != "" ? "${var.prefix}-${module.naming.function_app.name}" : module.naming.function_app.name
+      location                 = var.location
+      resource_group_name     = module.resource_group.name
+      enable_telemetry        = var.enable_telemetry
+      os_type                 = var.function_app_config.function_app.os_type
+      https_only              = var.function_app_config.function_app.https_only
+      client_certificate_enabled = var.function_app_config.function_app.client_certificate_enabled
+      public_network_access_enabled = var.function_app_config.function_app.public_network_access_enabled
+      ftp_publish_basic_authentication_enabled = var.function_app_config.function_app.ftp_publish_basic_authentication_enabled
+      webdeploy_publish_basic_authentication_enabled = var.function_app_config.function_app.webdeploy_publish_basic_authentication_enabled
+      
+      user_assigned_resource_ids = [module.identity.identity_resource_id]
+      
+      application_insights_name = module.monitoring.application_insights.name
+      application_insights_resource_group_name = module.resource_group.name
+      application_insights_location = var.location
+      application_insights_type = var.function_app_config.function_app.application_insights_type
+      application_insights_workspace_id = module.monitoring.log_analytics_id
+      
+      storage_account_name = module.storage.storage_account_name
+      storage_uses_managed_identity = var.function_app_config.function_app.storage_uses_managed_identity
+      key_vault_reference_identity_id = module.identity.identity_resource_id
+      
+      site_config = var.function_app_config.function_app.site_config
+      
+      app_settings = merge(
+        var.function_app_config.function_app.app_settings,
+        {
+          # Application Insights
+          APPINSIGHTS_INSTRUMENTATIONKEY        = module.monitoring.application_insights_instrumentation_key
+          APPLICATIONINSIGHTS_CONNECTION_STRING = module.monitoring.application_insights_connection_string
+          
+          # Service Bus connection using managed identity
+          ServiceBusConnection__fullyQualifiedNamespace = "${module.service_bus.service_bus_name}.servicebus.windows.net"
+          ServiceBusConnection__credential               = "managedidentity"
+          ServiceBusConnection__clientId                 = module.identity.identity_client_id
+          
+          # Storage account settings
+          AzureWebJobsStorage__accountName = module.storage.storage_account_name
+          AzureWebJobsStorage__credential  = "managedidentity"
+          AzureWebJobsStorage__clientId    = module.identity.identity_client_id
+        }
+      )
+      
+      enable_diagnostic_settings = var.function_app_config.function_app.enable_diagnostic_settings
+      log_analytics_workspace_id = module.monitoring.log_analytics_id
+      
+      tags = var.tags
     }
-  } : {}
-
-  tags = var.tags
-
+  }
+  
   depends_on = [
-    module.app_service_plan,
-    module.storage_account,
+    module.storage,
     module.service_bus,
-    module.application_insights,
-    module.user_assigned_identity
+    module.monitoring,
+    module.identity
   ]
 }
 
-# RBAC assignments for managed identity to access Service Bus
-resource "azurerm_role_assignment" "function_app_service_bus_sender" {
-  scope                = module.service_bus.resource.id
+# RBAC assignments for user-assigned managed identity to access Service Bus
+resource "azurerm_role_assignment" "identity_service_bus_sender" {
+  scope                = module.service_bus.service_bus_id
   role_definition_name = "Azure Service Bus Data Sender"
-  principal_id         = module.user_assigned_identity.resource.principal_id
+  principal_id         = module.identity.identity_principal_id
   
-  depends_on = [module.service_bus, module.user_assigned_identity]
+  depends_on = [module.service_bus, module.identity]
 }
 
-resource "azurerm_role_assignment" "function_app_service_bus_receiver" {
-  scope                = module.service_bus.resource.id
+resource "azurerm_role_assignment" "identity_service_bus_receiver" {
+  scope                = module.service_bus.service_bus_id
   role_definition_name = "Azure Service Bus Data Receiver"
-  principal_id         = module.user_assigned_identity.resource.principal_id
+  principal_id         = module.identity.identity_principal_id
   
-  depends_on = [module.service_bus, module.user_assigned_identity]
+  depends_on = [module.service_bus, module.identity]
 }
 
-# RBAC assignment for managed identity to access storage account
-resource "azurerm_role_assignment" "function_app_storage_blob_data_owner" {
-  scope                = module.storage_account.resource.id
+# RBAC assignment for user-assigned managed identity to access storage account
+resource "azurerm_role_assignment" "identity_storage_blob_data_owner" {
+  scope                = module.storage.storage_account_id
   role_definition_name = "Storage Blob Data Owner"
-  principal_id         = module.user_assigned_identity.resource.principal_id
+  principal_id         = module.identity.identity_principal_id
   
-  depends_on = [module.storage_account, module.user_assigned_identity]
+  depends_on = [module.storage, module.identity]
 }
 
-resource "azurerm_role_assignment" "function_app_storage_account_contributor" {
-  scope                = module.storage_account.resource.id
+resource "azurerm_role_assignment" "identity_storage_account_contributor" {
+  scope                = module.storage.storage_account_id
   role_definition_name = "Storage Account Contributor"
-  principal_id         = module.user_assigned_identity.resource.principal_id
+  principal_id         = module.identity.identity_principal_id
   
-  depends_on = [module.storage_account, module.user_assigned_identity]
+  depends_on = [module.storage, module.identity]
 }
 
-# Also assign roles to the system-assigned identity
+# RBAC assignment for Function App system-assigned identity to access Service Bus
 resource "azurerm_role_assignment" "function_app_system_service_bus_sender" {
-  scope                = module.service_bus.resource.id
+  scope                = module.service_bus.service_bus_id
   role_definition_name = "Azure Service Bus Data Sender"
-  principal_id         = module.function_app.identity_principal_id
+  principal_id         = module.function_app.function_app_identity_principal_id
   
   depends_on = [module.service_bus, module.function_app]
 }
 
 resource "azurerm_role_assignment" "function_app_system_service_bus_receiver" {
-  scope                = module.service_bus.resource.id
+  scope                = module.service_bus.service_bus_id
   role_definition_name = "Azure Service Bus Data Receiver"
-  principal_id         = module.function_app.identity_principal_id
+  principal_id         = module.function_app.function_app_identity_principal_id
   
   depends_on = [module.service_bus, module.function_app]
 }
 
 resource "azurerm_role_assignment" "function_app_system_storage_blob_data_owner" {
-  scope                = module.storage_account.resource.id
+  scope                = module.storage.storage_account_id
   role_definition_name = "Storage Blob Data Owner"
-  principal_id         = module.function_app.identity_principal_id
+  principal_id         = module.function_app.function_app_identity_principal_id
   
-  depends_on = [module.storage_account, module.function_app]
+  depends_on = [module.storage, module.function_app]
 }
 
 # Random wait to ensure RBAC propagation
@@ -359,10 +268,10 @@ resource "time_sleep" "rbac_propagation" {
   create_duration = "60s"
   
   depends_on = [
-    azurerm_role_assignment.function_app_service_bus_sender,
-    azurerm_role_assignment.function_app_service_bus_receiver,
-    azurerm_role_assignment.function_app_storage_blob_data_owner,
-    azurerm_role_assignment.function_app_storage_account_contributor,
+    azurerm_role_assignment.identity_service_bus_sender,
+    azurerm_role_assignment.identity_service_bus_receiver,
+    azurerm_role_assignment.identity_storage_blob_data_owner,
+    azurerm_role_assignment.identity_storage_account_contributor,
     azurerm_role_assignment.function_app_system_service_bus_sender,
     azurerm_role_assignment.function_app_system_service_bus_receiver,
     azurerm_role_assignment.function_app_system_storage_blob_data_owner
