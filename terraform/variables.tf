@@ -1,3 +1,8 @@
+# Resource Group Name (must be provided via environment variable)
+variable "resource_group_name" {
+  description = "Name of the existing Azure Resource Group to deploy resources into. Should be set via TF_VAR_resource_group_name, e.g., from AZURE_RESOURCE_GROUP_NAME."
+  type        = string
+}
 # Environment Configuration
 variable "environment" {
   description = "Environment name (dev, test, prod)"

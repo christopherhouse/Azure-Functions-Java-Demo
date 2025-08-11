@@ -1,8 +1,10 @@
+# Resource Group Name (must already exist)
+resource_group_name = "RG-JCI-INT-DEMO-PRD"
 # Production Environment Configuration
 
 # Environment Configuration
-environment = "prod"
-location    = "East US 2"
+environment = "prd"
+location    = "eastus2"
 workload    = "azfuncjava"
 prefix      = ""
 suffix      = ""
