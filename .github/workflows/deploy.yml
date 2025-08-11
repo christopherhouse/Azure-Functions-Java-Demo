@@ -56,10 +56,14 @@ jobs:
       - name: Deploy Infrastructure
         working-directory: ./terraform
         run: |
-          chmod +x deploy.sh
-          ./deploy.sh ${{ inputs.environment }} apply
+          chmod +x deploy-ci.sh
+          ./deploy-ci.sh ${{ inputs.environment }} apply
         env:
           TF_IN_AUTOMATION: true
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Get Function App Name
         id: function-app
@@ -68,6 +72,11 @@ jobs:
           FUNCTION_APP_NAME=$(terraform output -raw function_app_name)
           echo "name=$FUNCTION_APP_NAME" >> $GITHUB_OUTPUT
           echo "Function App Name: $FUNCTION_APP_NAME"
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy Function App
         uses: azure/functions-action@v1
@@ -101,6 +110,11 @@ jobs:
               "FUNCTIONS_WORKER_RUNTIME=java" \
               "FUNCTIONS_EXTENSION_VERSION=~4" \
               "WEBSITE_RUN_FROM_PACKAGE=1"
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Verify Deployment
         run: |
