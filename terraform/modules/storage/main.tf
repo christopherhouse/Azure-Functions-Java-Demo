@@ -36,8 +36,38 @@ module "storage_account" {
     default = {
       name                  = "diag-storage"
       workspace_resource_id = var.storage_config.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
+      enabled_log = [
+        {
+          category = "StorageRead"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        },
+        {
+          category = "StorageWrite"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        },
+        {
+          category = "StorageDelete"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+      enabled_metric = [
+        {
+          category = "AllMetrics"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
     }
   } : {}
 
