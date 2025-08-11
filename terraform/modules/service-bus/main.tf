@@ -27,8 +27,24 @@ module "service_bus" {
     default = {
       name                  = "diag-servicebus"
       workspace_resource_id = var.service_bus_config.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
+      enabled_log = [
+        {
+          category = "OperationalLogs"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+      enabled_metric = [
+        {
+          category = "AllMetrics"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
     }
   } : {}
 

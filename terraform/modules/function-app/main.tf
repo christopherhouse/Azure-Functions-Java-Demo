@@ -100,8 +100,38 @@ module "function_app" {
     default = {
       name                  = "diag-functionapp"
       workspace_resource_id = var.function_app_config.function_app.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
+      enabled_log = [
+        {
+          category = "FunctionAppLogs"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        },
+        {
+          category = "AppServiceAuditLogs"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        },
+        {
+          category = "AppServiceHTTPLogs"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+      enabled_metric = [
+        {
+          category = "AllMetrics"
+          retention_policy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
     }
   } : {}
 
