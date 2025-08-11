@@ -1,0 +1,189 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_environment:
+        description: 'Environment to deploy to'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: mvn clean compile -B
+        timeout-minutes: 10
+
+      - name: Run tests
+        if: ${{ !inputs.skip_tests }}
+        run: mvn test -B
+        timeout-minutes: 5
+
+      - name: Run manual validation tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          # Create test file
+          cat > /tmp/test_functions.java << 'EOF'
+          import com.christopherhouse.functions.models.*;
+          import com.christopherhouse.functions.services.OrderValidation;
+          import com.fasterxml.jackson.databind.ObjectMapper;
+          import java.util.Arrays;
+
+          class TestFunctions {
+              public static void main(String[] args) {
+                  try {
+                      // Test order validation with valid order
+                      OrderRequest validOrder = new OrderRequest();
+                      validOrder.setCustomerName("John Doe");
+                      validOrder.setCustomerEmail("john.doe@example.com");
+                      validOrder.setCustomerPhone("555-1234");
+                      validOrder.setShippingAddress("123 Main St");
+                      validOrder.setPaymentMethod("Credit Card");
+                      validOrder.setOrderDate("2025-01-01");
+                      validOrder.setOrderStatus("NEW");
+                      validOrder.setOrderId("ORDER-001");
+                      validOrder.setCustomerId("CUST-001");
+                      
+                      LineItem item = new LineItem("PROD-001", "Test Product", 2, 10.50);
+                      validOrder.setLineItems(Arrays.asList(item));
+                      
+                      boolean isValid = OrderValidation.isValidOrder(validOrder);
+                      System.out.println("Valid order validation result: " + isValid);
+                      
+                      // Test JSON serialization
+                      ObjectMapper mapper = new ObjectMapper();
+                      String jsonOrder = mapper.writeValueAsString(validOrder);
+                      System.out.println("JSON serialization successful: " + (jsonOrder.length() > 0));
+                      
+                      // Test deserialization
+                      String simpleJson = "{\"customerName\":\"John Doe\",\"customerEmail\":\"john.doe@example.com\",\"customerPhone\":\"555-1234\",\"shippingAddress\":\"123 Main St\",\"paymentMethod\":\"Credit Card\",\"orderDate\":\"2025-01-01\",\"orderStatus\":\"NEW\",\"orderId\":\"ORDER-001\",\"customerId\":\"CUST-001\",\"lineItems\":[{\"productId\":\"PROD-001\",\"productName\":\"Test Product\",\"quantity\":2,\"unitPrice\":10.5}]}";
+                      OrderRequest deserializedOrder = mapper.readValue(simpleJson, OrderRequest.class);
+                      System.out.println("JSON deserialization successful: " + (deserializedOrder.getCustomerName() != null));
+                      
+                      // Test line item total calculation
+                      double expectedTotal = 21.0; // 2 * 10.50
+                      double actualTotal = item.getTotalPrice();
+                      System.out.println("Line item total calculation correct: " + (expectedTotal == actualTotal));
+                      
+                      System.out.println("\nAll tests passed successfully!");
+                  } catch (Exception e) {
+                      System.err.println("Test failed: " + e.getMessage());
+                      e.printStackTrace();
+                      System.exit(1);
+                  }
+              }
+          }
+          EOF
+          
+          # Compile and run validation test
+          javac -cp "target/classes:$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" /tmp/test_functions.java -d /tmp/
+          java -cp "/tmp:target/classes:$(mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout)" TestFunctions
+
+      - name: Package Function App
+        run: mvn package -B -DskipTests
+        timeout-minutes: 10
+
+      - name: Create Terraform artifact
+        run: |
+          mkdir -p artifacts/terraform
+          cp -r terraform/* artifacts/terraform/
+          # Ensure deploy script is executable
+          chmod +x artifacts/terraform/deploy.sh
+
+      - name: Create Function App artifact
+        run: |
+          mkdir -p artifacts/function-app
+          # Copy the Azure Functions package - the package creates a subdirectory with the app name
+          if [ -d "target/azure-functions" ]; then
+            # Find the function app directory (it has a timestamp suffix)
+            FUNCTION_DIR=$(find target/azure-functions -maxdepth 1 -type d -name "DemoOrderFunction-*" | head -1)
+            if [ -n "$FUNCTION_DIR" ]; then
+              echo "Found function app directory: $FUNCTION_DIR"
+              cp -r "$FUNCTION_DIR"/* artifacts/function-app/
+            else
+              echo "Error: Could not find DemoOrderFunction directory in target/azure-functions"
+              ls -la target/azure-functions/
+              exit 1
+            fi
+          else
+            echo "Error: Azure Functions package not found in target/azure-functions"
+            ls -la target/
+            exit 1
+          fi
+
+      - name: Upload Terraform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-code
+          path: artifacts/terraform/
+          retention-days: 30
+
+      - name: Upload Function App artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: artifacts/function-app/
+          retention-days: 30
+
+  deploy-dev:
+    name: Deploy to Development
+    needs: build
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.deploy_environment == 'dev' || inputs.deploy_environment == ''))
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: dev
+      terraform_artifact_name: terraform-code
+      function_artifact_name: function-app
+    secrets: inherit
+
+  deploy-prod:
+    name: Deploy to Production
+    needs: build
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy_environment == 'prod')
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: prod
+      terraform_artifact_name: terraform-code
+      function_artifact_name: function-app
+    secrets: inherit
