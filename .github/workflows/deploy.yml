@@ -1,0 +1,126 @@
+name: Deploy Infrastructure and Function App
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy to (dev or prod)'
+        required: true
+        type: string
+      terraform_artifact_name:
+        description: 'Name of the terraform artifact'
+        required: true
+        type: string
+        default: 'terraform-code'
+      function_artifact_name:
+        description: 'Name of the function app artifact'
+        required: true
+        type: string
+        default: 'function-app'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Download terraform artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.terraform_artifact_name }}
+          path: ./terraform
+
+      - name: Download function app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.function_artifact_name }}
+          path: ./function-app
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9.0"
+
+      - name: Deploy Infrastructure
+        working-directory: ./terraform
+        run: |
+          chmod +x deploy.sh
+          ./deploy.sh ${{ inputs.environment }} apply
+        env:
+          TF_IN_AUTOMATION: true
+
+      - name: Get Function App Name
+        id: function-app
+        working-directory: ./terraform
+        run: |
+          FUNCTION_APP_NAME=$(terraform output -raw function_app_name)
+          echo "name=$FUNCTION_APP_NAME" >> $GITHUB_OUTPUT
+          echo "Function App Name: $FUNCTION_APP_NAME"
+
+      - name: Deploy Function App
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ steps.function-app.outputs.name }}
+          package: './function-app'
+          scm-do-build-during-deployment: false
+
+      - name: Configure Function App Settings
+        run: |
+          FUNCTION_APP_NAME="${{ steps.function-app.outputs.name }}"
+          
+          # Get outputs from terraform
+          cd terraform
+          SERVICE_BUS_NAMESPACE=$(terraform output -raw service_bus_namespace_name)
+          STORAGE_ACCOUNT_NAME=$(terraform output -raw storage_account_name)
+          APP_INSIGHTS_CONNECTION_STRING=$(terraform output -raw application_insights_connection_string)
+          MANAGED_IDENTITY_CLIENT_ID=$(terraform output -raw user_assigned_identity_client_id)
+          
+          # Configure Function App settings with managed identity
+          az functionapp config appsettings set \
+            --name "$FUNCTION_APP_NAME" \
+            --resource-group $(terraform output -raw resource_group_name) \
+            --settings \
+              "ServiceBusConnection__fullyQualifiedNamespace=${SERVICE_BUS_NAMESPACE}.servicebus.windows.net" \
+              "ServiceBusConnection__credential=managedidentity" \
+              "AzureWebJobsStorage__accountName=${STORAGE_ACCOUNT_NAME}" \
+              "AzureWebJobsStorage__credential=managedidentity" \
+              "APPLICATIONINSIGHTS_CONNECTION_STRING=${APP_INSIGHTS_CONNECTION_STRING}" \
+              "AZURE_CLIENT_ID=${MANAGED_IDENTITY_CLIENT_ID}" \
+              "FUNCTIONS_WORKER_RUNTIME=java" \
+              "FUNCTIONS_EXTENSION_VERSION=~4" \
+              "WEBSITE_RUN_FROM_PACKAGE=1"
+
+      - name: Verify Deployment
+        run: |
+          FUNCTION_APP_NAME="${{ steps.function-app.outputs.name }}"
+          
+          # Wait for function app to be ready
+          echo "Waiting for Function App to be ready..."
+          sleep 30
+          
+          # Check if the function is accessible
+          FUNCTION_URL="https://${FUNCTION_APP_NAME}.azurewebsites.net/api/ReceiveOrder"
+          echo "Function URL: $FUNCTION_URL"
+          
+          # Test basic connectivity (we can't test the function without a valid payload and auth)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X GET "https://${FUNCTION_APP_NAME}.azurewebsites.net")
+          echo "Function App HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 404 ]; then
+            echo "✅ Function App is accessible"
+          else
+            echo "❌ Function App is not accessible (Status: $HTTP_STATUS)"
+            exit 1
+          fi

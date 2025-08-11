@@ -161,12 +161,17 @@ plan_terraform() {
 apply_terraform() {
     local env=$1
     
-    log_warning "This will apply changes to the $env environment"
-    read -p "Are you sure you want to continue? (yes/no): " confirmation
-    
-    if [[ "$confirmation" != "yes" ]]; then
-        log_info "Deployment cancelled by user"
-        exit 0
+    # Skip confirmation in CI/automation environments
+    if [[ "${CI:-false}" == "true" || "${TF_IN_AUTOMATION:-false}" == "true" ]]; then
+        log_info "Running in automation mode, skipping confirmation"
+    else
+        log_warning "This will apply changes to the $env environment"
+        read -p "Are you sure you want to continue? (yes/no): " confirmation
+        
+        if [[ "$confirmation" != "yes" ]]; then
+            log_info "Deployment cancelled by user"
+            exit 0
+        fi
     fi
     
     log_info "Applying Terraform deployment for environment: $env"

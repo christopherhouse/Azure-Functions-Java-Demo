@@ -12,7 +12,7 @@ public class ReceiveOrder{
     @FunctionName("ReceiveOrder")
     public HttpResponseMessage run(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
-            @ServiceBusTopicOutput(name = "message", topicName = "received-orders", connection = "ServiceBusConnection") OutputBinding<OrderRequest> message,
+            @ServiceBusTopicOutput(name = "message", topicName = "received-orders", subscriptionName = "processing", connection = "ServiceBusConnection") OutputBinding<OrderRequest> message,
             final ExecutionContext context) {
         HttpResponseMessage response;
         context.getLogger().info("Received an order request.");
