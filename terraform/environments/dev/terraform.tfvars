@@ -4,7 +4,7 @@ resource_group_name = "RG-JCI-INT-DEMO-DEV"
 
 # Environment Configuration
 environment = "dev"
-location    = "East US 2"
+location    = "eastus2"
 workload    = "azfuncjava"
 prefix      = ""
 suffix      = ""

@@ -5,8 +5,8 @@ module "naming" {
   source  = "Azure/naming/azurerm"
   version = ">= 0.4.0"
 
-  prefix = [var.workload, var.environment]
-  suffix = var.suffix != "" ? [var.suffix] : []
+  prefix = [var.workload]
+  suffix = [var.environment]
 }
 
 # Resource Group
