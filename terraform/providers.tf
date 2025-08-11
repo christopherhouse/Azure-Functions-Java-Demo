@@ -31,6 +31,7 @@ provider "azurerm" {
       recover_soft_deleted_key_vaults = true
     }
   }
+  resource_provider_registrations = "none"
 }
 
 # Get current client configuration
