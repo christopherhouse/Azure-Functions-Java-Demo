@@ -139,3 +139,15 @@ buildNumber.properties
 # Azure Functions localsettings file
 local.settings.json
 
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/environments/*/terraform.plan
+terraform/environments/*/.terraform/
+terraform/environments/*/.terraform.lock.hcl
+terraform/environments/*/terraform.tfstate
+terraform/environments/*/terraform.tfstate.backup
+*.tfvars.backup
+

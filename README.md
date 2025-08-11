@@ -7,7 +7,7 @@
 ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apache-maven&logoColor=white)
 ![Service Bus](https://img.shields.io/badge/Service%20Bus-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)
 
-**A comprehensive demonstration of Azure Functions in Java with order processing capabilities** 📦
+**A comprehensive demonstration of Azure Functions in Java with order processing capabilities and Infrastructure as Code** 📦
 
 </div>
 
@@ -20,6 +20,9 @@ This repository showcases a **production-ready Azure Functions application** bui
 - 🚌 **Azure Service Bus integration** for message queuing
 - 📋 **Complete order processing workflow**
 - 🏗️ **Enterprise-ready architecture patterns**
+- ☁️ **Infrastructure as Code** with Terraform
+- 🔐 **Managed Identity** for secure, credential-free authentication
+- 📊 **Comprehensive monitoring** with Application Insights and Log Analytics
 
 Perfect for developers learning Azure Functions with Java or looking for a solid foundation for serverless order processing systems!
 
@@ -33,8 +36,19 @@ Perfect for developers learning Azure Functions with Java or looking for a solid
 📁 Azure-Functions-Java-Demo/
 ├── 📄 pom.xml                                    # Maven configuration & dependencies
 ├── 📄 host.json                                  # Azure Functions runtime configuration
+├── 📄 local.settings.json.template               # Template for local development settings
+├── 📁 terraform/                                 # Infrastructure as Code
+│   ├── 📄 main.tf                                # Main infrastructure configuration
+│   ├── 📄 variables.tf                           # Input variables definition
+│   ├── 📄 outputs.tf                             # Output values
+│   ├── 📄 providers.tf                           # Provider configuration
+│   ├── 🔧 deploy.sh                              # Deployment automation script
+│   ├── 📖 README.md                              # Infrastructure documentation
+│   └── 📁 environments/                          # Environment-specific configurations
+│       ├── 📁 dev/                               # Development environment
+│       └── 📁 prod/                              # Production environment
 ├── 📁 src/main/java/com/christopherhouse/functions/
-│   ├── ⚡ ReceiveOrder.java                      # Main order processing function
+│   ├── ⚡ ReceiveOrder.java                      # Main order processing function (updated for identity auth)
 │   ├── 📁 models/                               # Data transfer objects
 │   │   ├── 📋 OrderRequest.java                 # Incoming order model with validation
 │   │   ├── ✅ OrderConfirmation.java            # Response confirmation model
@@ -188,27 +202,78 @@ curl -X POST http://localhost:7071/api/ReceiveOrder \
 
 ### ⚙️ Configuration
 
-#### Service Bus Connection
+#### Infrastructure Configuration
 
-Configure `local.settings.json` in the function app directory:
+Infrastructure settings are managed through Terraform variables:
+
+- **Environment-specific**: `terraform/environments/{env}/terraform.tfvars`
+- **Backend state**: `terraform/environments/{env}/backend.conf`
+- **Customizable settings**: Function App SKU, Service Bus tier, retention periods, security settings
+
+#### Application Configuration
+
+**Production (Identity-based)**:
 ```json
 {
-  "IsEncrypted": false,
-  "Values": {
-    "FUNCTIONS_WORKER_RUNTIME": "java",
-    "serviceBusConnectionString": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=your-key;SharedAccessKey=your-secret"
-  }
+  "ServiceBusConnection__fullyQualifiedNamespace": "namespace.servicebus.windows.net",
+  "ServiceBusConnection__credential": "managedidentity",
+  "AzureWebJobsStorage__accountName": "storageaccountname",
+  "AzureWebJobsStorage__credential": "managedidentity"
+}
+```
+
+**Local Development (Connection strings)**:
+```json
+{
+  "ServiceBusConnection": "Endpoint=sb://namespace.servicebus.windows.net/;SharedAccessKeyName=key;SharedAccessKey=secret",
+  "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=account;AccountKey=key;EndpointSuffix=core.windows.net"
 }
 ```
 
 ### 🚀 Deployment
 
+### Infrastructure Deployment
+
+The repository includes complete Infrastructure as Code using Terraform:
+
 ```bash
-# 🌐 Deploy to Azure
+# Navigate to infrastructure directory
+cd terraform/
+
+# Set up backend storage (one-time setup)
+# Follow instructions in terraform/README.md
+
+# Deploy development environment
+./deploy.sh dev plan    # Review planned changes
+./deploy.sh dev apply   # Deploy infrastructure
+
+# Deploy production environment
+./deploy.sh prod plan   # Review planned changes
+./deploy.sh prod apply  # Deploy infrastructure
+```
+
+**Infrastructure includes:**
+- ☁️ **Resource Group** with consistent naming
+- 📊 **Log Analytics Workspace** for centralized logging
+- 📈 **Application Insights** for performance monitoring
+- 🔐 **User-Assigned Managed Identity** for secure authentication
+- 💾 **Storage Account** with managed identity integration
+- 🚌 **Service Bus Namespace** with topics and subscriptions
+- ⚡ **App Service Plan** (Consumption/Premium/Isolated options)
+- 🔧 **Function App** with Java 11 runtime and identity-based connections
+
+### Application Deployment
+
+After infrastructure is deployed:
+
+```bash
+# Package the application
+mvn clean package
+
+# Deploy to Azure (requires infrastructure to be deployed first)
 mvn azure-functions:deploy
 
-# 📊 View deployment status
-az functionapp show --name DemoOrderFunction-1754659291844 --resource-group java-functions-group
+# Or use automated deployment through CI/CD pipelines
 ```
 
 ## 🔍 Key Technologies
@@ -226,12 +291,17 @@ az functionapp show --name DemoOrderFunction-1754659291844 --resource-group java
 ## 💡 Features
 
 - ✅ **Enterprise Validation**: Comprehensive request validation using Jakarta Bean Validation
-- 🚌 **Message Queuing**: Asynchronous order processing via Service Bus
+- 🚌 **Message Queuing**: Asynchronous order processing via Service Bus Topics
 - 🔄 **Error Handling**: Graceful handling of invalid requests and processing errors
 - 📊 **Automatic Calculations**: Built-in order total calculations
 - 🏗️ **Scalable Architecture**: Serverless design for automatic scaling
 - 🛡️ **Type Safety**: Strong typing with comprehensive data models
 - 📋 **Structured Logging**: Built-in logging through Azure Functions runtime
+- ☁️ **Infrastructure as Code**: Complete Terraform infrastructure with Azure Verified Modules
+- 🔐 **Managed Identity**: Credential-free authentication for all Azure services
+- 📈 **Monitoring**: Application Insights and Log Analytics integration
+- 🌍 **Multi-Environment**: Separate configurations for dev, test, and production
+- 🔧 **Automated Deployment**: Scripts for infrastructure and application deployment
 
 ## 🤝 Contributing
 

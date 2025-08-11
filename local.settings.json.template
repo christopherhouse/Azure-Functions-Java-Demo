@@ -1,0 +1,25 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "WEBSITE_RUN_FROM_PACKAGE": "1",
+
+    "_COMMENT_IDENTITY_BASED_CONFIG": "Configuration for identity-based authentication",
+    "ServiceBusConnection__fullyQualifiedNamespace": "your-servicebus-namespace.servicebus.windows.net",
+    "ServiceBusConnection__credential": "managedidentity",
+    
+    "_COMMENT_LOCAL_DEVELOPMENT": "For local development, you can use connection strings",
+    "ServiceBusConnection__connectionString": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=your-key;SharedAccessKey=your-secret",
+    
+    "_COMMENT_STORAGE_CONFIG": "Storage configuration using managed identity (production) or connection string (local)",
+    "AzureWebJobsStorage__accountName": "your-storage-account-name",
+    "AzureWebJobsStorage__credential": "managedidentity",
+    "_COMMENT_STORAGE_LOCAL": "For local development, use connection string",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=your-storage-account;AccountKey=your-key;EndpointSuffix=core.windows.net",
+    
+    "_COMMENT_APP_INSIGHTS": "Application Insights configuration",
+    "APPINSIGHTS_INSTRUMENTATIONKEY": "your-instrumentation-key",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/;LiveEndpoint=https://your-region.livediagnostics.monitor.azure.com/;ApplicationId=your-app-id"
+  }
+}

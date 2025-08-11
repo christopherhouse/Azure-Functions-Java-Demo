@@ -1,10 +1,12 @@
 # Azure Functions Java Demo
 
-Azure Functions Java Demo is a Maven-based Java 11 application demonstrating Azure Functions with HTTP triggers and Service Bus integration. It includes order processing functionality with validation and JSON serialization.
+Azure Functions Java Demo is a Maven-based Java 11 application demonstrating Azure Functions with HTTP triggers and Service Bus integration. It includes order processing functionality with validation and JSON serialization, along with complete Infrastructure as Code (IaC) using Terraform.
 
 Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
 
 ## Working Effectively
+
+### Application Development
 
 - Bootstrap, build, and test the repository:
   - Ensure Java 11+ is installed: `java -version` (requires OpenJDK 11 or later)
@@ -16,10 +18,28 @@ Always reference these instructions first and fallback to search or bash command
   - Manually validate core functionality: Compile and run business logic tests as shown in validation section below.
 - Run the Azure Functions locally:
   - Install Azure Functions Core Tools v4: Follow Microsoft installation guide or use package manager
+  - Configure `local.settings.json` using the template provided
   - `func start --java --prefix target/azure-functions/DemoOrderFunction-1754659291844` -- requires internet connection for extension bundles
   - **NETWORK REQUIREMENT**: Local execution requires internet access to download Azure Functions extension bundles from cdn.functions.azure.com
 - Code quality checks:
   - `mvn checkstyle:check` -- validates code style. **WARNING**: Currently fails with 289+ violations using default Sun checks ruleset. Use for reference only.
+
+### Infrastructure Development
+
+- Infrastructure as Code with Terraform:
+  - Prerequisites: Azure CLI logged in (`az login`), Terraform 1.9+, appropriate Azure permissions
+  - Navigate to `terraform/` directory for all infrastructure operations
+  - Validate configuration: `./validate.sh` -- comprehensive validation of Terraform configuration
+  - Create backend storage: Follow instructions in `terraform/README.md` for setting up state storage
+  - Plan deployment: `./deploy.sh dev plan` (development) or `./deploy.sh prod plan` (production)
+  - Apply deployment: `./deploy.sh dev apply` or `./deploy.sh prod apply`
+  - Destroy resources: `./deploy.sh dev destroy` or `./deploy.sh prod destroy`
+  - **IMPORTANT**: Always plan before applying changes to production
+- Infrastructure validation:
+  - `terraform validate` -- validates configuration syntax
+  - `terraform fmt -check` -- checks formatting
+  - `./validate.sh` -- comprehensive validation script
+  - Review plan output before applying changes
 
 ## Validation
 
@@ -100,8 +120,23 @@ Since local runtime requires internet connectivity, test HTTP functions by:
 .
 ├── pom.xml                           # Maven build configuration
 ├── host.json                         # Azure Functions host configuration  
+├── local.settings.json.template      # Template for local development settings
+├── terraform/                        # Infrastructure as Code
+│   ├── main.tf                       # Main infrastructure configuration
+│   ├── variables.tf                  # Input variables
+│   ├── outputs.tf                    # Output values
+│   ├── providers.tf                  # Provider configuration
+│   ├── deploy.sh                     # Deployment script
+│   ├── README.md                     # Infrastructure documentation
+│   └── environments/                 # Environment-specific configurations
+│       ├── dev/                      # Development environment
+│       │   ├── terraform.tfvars      # Dev variables
+│       │   └── backend.conf          # Dev backend config
+│       └── prod/                     # Production environment
+│           ├── terraform.tfvars      # Prod variables
+│           └── backend.conf          # Prod backend config
 ├── src/main/java/com/christopherhouse/functions/
-│   ├── ReceiveOrder.java             # Order processing HTTP trigger with Service Bus output
+│   ├── ReceiveOrder.java             # Order processing HTTP trigger with Service Bus output (updated for identity-based auth)
 │   ├── models/                       # Data models
 │   │   ├── OrderRequest.java         # Order request model with validation
 │   │   ├── OrderConfirmation.java    # Order confirmation response model
@@ -134,14 +169,27 @@ Since local runtime requires internet connectivity, test HTTP functions by:
 - Internet connectivity (for Azure Functions extension bundles and dependencies)
 
 ### Local Development Configuration
-The application requires a `serviceBusConnectionString` setting in `local.settings.json` for the ReceiveOrder function. The generated file in `target/azure-functions/DemoOrderFunction-1754659291844/local.settings.json` needs:
+The application supports both identity-based authentication (production) and connection string authentication (local development).
 
+#### Identity-Based Configuration (Production/Deployed)
+The deployed Function App uses managed identity for secure, credential-free access:
+- **Service Bus**: Uses `ServiceBusConnection__fullyQualifiedNamespace` and `ServiceBusConnection__credential=managedidentity`
+- **Storage**: Uses `AzureWebJobsStorage__accountName` and `AzureWebJobsStorage__credential=managedidentity`
+
+#### Connection String Configuration (Local Development)
+For local development, use the traditional connection string approach:
+- Copy `local.settings.json.template` to `local.settings.json` 
+- Configure connection strings for Service Bus and Storage Account
+- The template provides both identity-based and connection string examples
+
+Example local.settings.json for development:
 ```json
 {
   "IsEncrypted": false,
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "java",
-    "serviceBusConnectionString": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=your-key;SharedAccessKey=your-secret"
+    "ServiceBusConnection": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=your-key;SharedAccessKey=your-secret",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=storageaccount;AccountKey=key;EndpointSuffix=core.windows.net"
   }
 }
 ```
