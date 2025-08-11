@@ -1,3 +1,5 @@
+# Resource Group Name (must already exist)
+resource_group_name = "<YOUR-PROD-RG-NAME>"
 # Production Environment Configuration
 
 # Environment Configuration

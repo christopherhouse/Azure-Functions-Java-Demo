@@ -10,16 +10,7 @@ module "naming" {
 }
 
 # Resource Group
-module "resource_group" {
-  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
-  version = ">= 0.2.0"
 
-  name             = var.prefix != "" ? "${var.prefix}-${module.naming.resource_group.name}" : module.naming.resource_group.name
-  location         = var.location
-  enable_telemetry = var.enable_telemetry
-
-  tags = var.tags
-}
 
 # Monitoring Module (Log Analytics and Application Insights)
 module "monitoring" {
@@ -29,7 +20,7 @@ module "monitoring" {
     log_analytics = {
       name                = var.prefix != "" ? "${var.prefix}-${module.naming.log_analytics_workspace.name}" : module.naming.log_analytics_workspace.name
       location            = var.location
-      resource_group_name = module.resource_group.name
+      resource_group_name = var.resource_group_name
       enable_telemetry    = var.enable_telemetry
       retention_in_days   = var.monitoring_config.log_analytics.retention_in_days
       sku                 = var.monitoring_config.log_analytics.sku
@@ -39,7 +30,7 @@ module "monitoring" {
     application_insights = {
       name                          = var.prefix != "" ? "${var.prefix}-${module.naming.application_insights.name}" : module.naming.application_insights.name
       location                      = var.location
-      resource_group_name           = module.resource_group.name
+      resource_group_name           = var.resource_group_name
       enable_telemetry              = var.enable_telemetry
       application_type              = var.monitoring_config.application_insights.application_type
       retention_in_days             = var.monitoring_config.application_insights.retention_in_days
@@ -57,7 +48,7 @@ module "identity" {
   identity_config = {
     name                = var.prefix != "" ? "${var.prefix}-${module.naming.user_assigned_identity.name}" : module.naming.user_assigned_identity.name
     location            = var.location
-    resource_group_name = module.resource_group.name
+    resource_group_name = var.resource_group_name
     enable_telemetry    = var.enable_telemetry
     tags                = var.tags
 
@@ -76,7 +67,7 @@ module "storage" {
   storage_config = {
     name                          = var.prefix != "" ? "${var.prefix}${module.naming.storage_account.name_unique}" : module.naming.storage_account.name_unique
     location                      = var.location
-    resource_group_name           = module.resource_group.name
+    resource_group_name           = var.resource_group_name
     enable_telemetry              = var.enable_telemetry
     account_tier                  = var.storage_config.account_tier
     account_replication_type      = var.storage_config.account_replication_type
@@ -105,7 +96,7 @@ module "service_bus" {
   service_bus_config = {
     name                          = var.prefix != "" ? "${var.prefix}-${module.naming.servicebus_namespace.name}" : module.naming.servicebus_namespace.name
     location                      = var.location
-    resource_group_name           = module.resource_group.name
+    resource_group_name           = var.resource_group_name
     enable_telemetry              = var.service_bus_config.enable_telemetry
     sku                           = var.service_bus_config.sku
     capacity                      = var.service_bus_config.sku == "Premium" ? var.service_bus_config.capacity : null
@@ -133,7 +124,7 @@ module "function_app" {
     app_service_plan = {
       name                         = var.prefix != "" ? "${var.prefix}-${module.naming.app_service_plan.name}" : module.naming.app_service_plan.name
       location                     = var.location
-      resource_group_name          = module.resource_group.name
+      resource_group_name          = var.resource_group_name
       enable_telemetry             = var.enable_telemetry
       os_type                      = var.function_app_config.app_service_plan.os_type
       sku_name                     = var.function_app_config.app_service_plan.sku_name
@@ -147,7 +138,7 @@ module "function_app" {
     function_app = {
       name                                           = var.prefix != "" ? "${var.prefix}-${module.naming.function_app.name}" : module.naming.function_app.name
       location                                       = var.location
-      resource_group_name                            = module.resource_group.name
+      resource_group_name                            = var.resource_group_name
       enable_telemetry                               = var.enable_telemetry
       os_type                                        = var.function_app_config.function_app.os_type
       https_only                                     = var.function_app_config.function_app.https_only
@@ -159,7 +150,7 @@ module "function_app" {
       user_assigned_resource_ids = [module.identity.identity_resource_id]
 
       application_insights_name                = module.monitoring.application_insights.name
-      application_insights_resource_group_name = module.resource_group.name
+      application_insights_resource_group_name = var.resource_group_name
       application_insights_location            = var.location
       application_insights_type                = var.function_app_config.function_app.application_insights_type
       application_insights_workspace_id        = module.monitoring.log_analytics_id
