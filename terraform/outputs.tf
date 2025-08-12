@@ -49,20 +49,20 @@ output "service_bus_namespace_hostname" {
 }
 
 # Storage Account
+
 output "storage_account_name" {
   description = "Name of the storage account"
   value       = module.storage.storage_account_name
 }
+
 
 output "storage_account_id" {
   description = "ID of the storage account"
   value       = module.storage.storage_account_id
 }
 
-output "storage_account_primary_blob_endpoint" {
-  description = "Primary blob endpoint of the storage account"
-  value       = module.storage.storage_account.primary_blob_endpoint
-}
+
+## The new storage_azurerm module does not output primary_blob_endpoint. Add if needed.
 
 # Application Insights
 output "application_insights_name" {
@@ -117,7 +117,7 @@ output "user_assigned_identity_client_id" {
 # App Service Plan
 output "app_service_plan_name" {
   description = "Name of the App Service Plan"
-  value       = module.function_app.app_service_plan.name
+  value       = module.function_app.app_service_plan_name
 }
 
 output "app_service_plan_id" {

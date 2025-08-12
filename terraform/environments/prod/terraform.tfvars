@@ -135,7 +135,7 @@ function_app_config = {
 
     application_insights_type = "web"
 
-    storage_uses_managed_identity = true
+  storage_uses_managed_identity = false
 
     site_config = {
       java_version        = "11"

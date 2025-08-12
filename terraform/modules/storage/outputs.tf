@@ -1,14 +1,15 @@
-output "storage_account" {
-  description = "The storage account resource"
-  value       = module.storage_account.resource
-}
-
 output "storage_account_id" {
-  description = "The resource ID of the storage account"
-  value       = module.storage_account.resource.id
+  value = azurerm_storage_account.this.id
 }
 
 output "storage_account_name" {
-  description = "The name of the storage account"
-  value       = module.storage_account.resource.name
+  value = azurerm_storage_account.this.name
+}
+
+output "primary_access_key" {
+  value = azurerm_storage_account.this.primary_access_key
+}
+
+output "resource" {
+  value = azurerm_storage_account.this
 }
