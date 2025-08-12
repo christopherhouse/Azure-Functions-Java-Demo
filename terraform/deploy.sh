@@ -51,7 +51,8 @@ show_usage() {
     echo "  - Azure CLI logged in (az login)"
     echo "  - Terraform installed"
     echo "  - Appropriate Azure permissions"
-    echo "  - Backend storage account created"
+    echo ""
+    echo "Note: Backend storage is automatically created if it doesn't exist."
 }
 
 # Function to validate environment
@@ -114,6 +115,27 @@ check_prerequisites() {
     fi
     
     log_success "Prerequisites check passed"
+}
+
+# Function to bootstrap backend storage
+bootstrap_backend() {
+    local env=$1
+    
+    log_info "Bootstrapping backend storage for environment: $env"
+    
+    cd "$TERRAFORM_DIR"
+    
+    if [[ -f "./bootstrap-backend.sh" ]]; then
+        ./bootstrap-backend.sh "$env"
+        if [[ $? -eq 0 ]]; then
+            log_success "Backend storage bootstrap completed"
+        else
+            log_error "Backend storage bootstrap failed"
+            exit 1
+        fi
+    else
+        log_warning "Bootstrap script not found, assuming backend storage already exists"
+    fi
 }
 
 # Function to initialize Terraform
@@ -246,6 +268,9 @@ main() {
     
     # Check prerequisites
     check_prerequisites
+    
+    # Bootstrap backend storage
+    bootstrap_backend "$environment"
     
     # Initialize Terraform
     init_terraform "$environment"
