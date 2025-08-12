@@ -149,6 +149,8 @@ terraform/environments/*/.terraform/
 terraform/environments/*/.terraform.lock.hcl
 terraform/environments/*/terraform.tfstate
 terraform/environments/*/terraform.tfstate.backup
+terraform/modules/*/.terraform/
+terraform/modules/*/.terraform.lock.hcl
 *.tfvars.backup
 terraform/*.local.auto.tfvars
 terraform/*/*.local.auto.tfvars
