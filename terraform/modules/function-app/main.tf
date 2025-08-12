@@ -23,7 +23,8 @@ resource "azurerm_linux_function_app" "fa" {
     identity_ids = var.function_app_config.function_app.user_assigned_resource_ids
   }
 
-  storage_account_name = var.function_app_config.function_app.storage_account_name
+  storage_account_name       = var.function_app_config.function_app.storage_account_name
+  storage_account_access_key = var.function_app_config.function_app.storage_account_access_key
 
   site_config {
     application_stack {
@@ -44,9 +45,10 @@ resource "azurerm_monitor_diagnostic_setting" "fa_diag" {
     category = "FunctionAppLogs"
   }
   enabled_log {
-    category = "AppServiceAuditLogs"
+    category = "AppServiceAuthenticationLogs"
   }
-  enabled_log {
-    category = "AppServiceHTTPLogs"
+
+  enabled_metric {
+    category = "AllMetrics"
   }
 }

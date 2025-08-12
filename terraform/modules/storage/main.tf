@@ -30,25 +30,73 @@ resource "azurerm_storage_account" "this" {
 
 }
 
-resource "azurerm_monitor_diagnostic_setting" "this" {
+# Diagnostic setting for the file service (Azure Files)
+resource "azurerm_monitor_diagnostic_setting" "file_service" {
   count                      = var.enable_diagnostic_settings ? 1 : 0
-  name                       = var.diagnostic_name
-  target_resource_id         = azurerm_storage_account.this.id
+  name                       = "diag-fileservice"
+  # File service resource ID: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/fileServices/default
+  target_resource_id         = "${azurerm_storage_account.this.id}/fileServices/default"
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  enabled_log { category = "StorageRead" }
-  enabled_log { category = "StorageWrite" }
-  enabled_log { category = "StorageDelete" }
-  enabled_log { category = "Service" }
-  enabled_log { category = "Delete" }
-  enabled_log { category = "Audit" }
-  enabled_log { category = "Transaction" }
-  enabled_log { category = "Network" }
-  enabled_log { category = "FileAccess" }
-  enabled_log { category = "FileShare" }
-  enabled_log { category = "Table" }
-  enabled_log { category = "Queue" }
-  enabled_metric { category = "AllMetrics" }
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_metric { category = "Transaction" }
+}
+
+# Diagnostic setting for the blob service (Azure Blob)
+resource "azurerm_monitor_diagnostic_setting" "blob_service" {
+  count                      = var.enable_diagnostic_settings ? 1 : 0
+  name                       = "diag-blobservice"
+  target_resource_id         = "${azurerm_storage_account.this.id}/blobServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_metric { category = "Transaction" }
+}
+
+# Diagnostic setting for the queue service (Azure Queue)
+resource "azurerm_monitor_diagnostic_setting" "queue_service" {
+  count                      = var.enable_diagnostic_settings ? 1 : 0
+  name                       = "diag-queueservice"
+  target_resource_id         = "${azurerm_storage_account.this.id}/queueServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_metric { category = "Transaction" }
+}
+
+# Diagnostic setting for the table service (Azure Table)
+resource "azurerm_monitor_diagnostic_setting" "table_service" {
+  count                      = var.enable_diagnostic_settings ? 1 : 0
+  name                       = "diag-tableservice"
+  target_resource_id         = "${azurerm_storage_account.this.id}/tableServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_log {
+    category_group = "audit"
+  }
+
+  enabled_metric { category = "Transaction" }
 }
 
 resource "azurerm_role_assignment" "rbac" {

@@ -123,7 +123,7 @@ module "function_app" {
       maximum_elastic_worker_count = var.function_app_config.app_service_plan.maximum_elastic_worker_count
       tags                         = var.tags
     }
-    function_app = {
+  function_app = {
       name                                           = var.prefix != "" ? "${var.prefix}-${module.naming.function_app.name}" : module.naming.function_app.name
       location                                       = var.location
       resource_group_name                            = data.azurerm_resource_group.rg.name
@@ -140,9 +140,10 @@ module "function_app" {
       application_insights_location                  = var.location
       application_insights_type                      = var.function_app_config.function_app.application_insights_type
       application_insights_workspace_id              = module.monitoring.log_analytics_id
-      storage_account_name                           = module.storage.storage_account_name
-      storage_uses_managed_identity                  = var.function_app_config.function_app.storage_uses_managed_identity
-      key_vault_reference_identity_id                = module.identity.identity_resource_id
+  storage_account_name            = module.storage.storage_account_name
+  storage_account_access_key      = module.storage.primary_access_key
+  storage_uses_managed_identity   = var.function_app_config.function_app.storage_uses_managed_identity
+  key_vault_reference_identity_id = module.identity.identity_resource_id
       site_config                                    = var.function_app_config.function_app.site_config
       app_settings = merge(
         var.function_app_config.function_app.app_settings,
