@@ -6,6 +6,19 @@ Always reference these instructions first and fallback to search or bash command
 
 ## Working Effectively
 
+### Agent Tools
+- context7:
+  - Use this MCP server to find up to date documentation on common development tools, libraries and frameworks.
+  - Example subjects where context7 can help that are relevant to this repository:
+    - Azure
+    - Azure Functions
+    - Azure Functions for Java
+    - Terraform
+    - azurerm for Terraform
+    - azapi for Terraform
+    - GitHub Actions
+    - Java
+
 ### Application Development
 
 - Bootstrap, build, and test the repository:
