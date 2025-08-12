@@ -1,35 +1,36 @@
 # Resource Names Output
-# Provides consistent naming for all Azure resources used in the infrastructure
+# Provides Azure CAF compliant naming for all resources following the pattern:
+# [azure resource type abbreviation]-[workloadName]-[environment]-[uniqueString]
 
-# Standard resource names using Azure naming module patterns
+# Standard resource names using Azure CAF abbreviations
 output "log_analytics_workspace" {
   description = "Log Analytics Workspace name"
-  value       = module.azure_naming.log_analytics_workspace.name
+  value       = local.resource_names.log_analytics_workspace
 }
 
 output "application_insights" {
-  description = "Application Insights name"
-  value       = module.azure_naming.application_insights.name
+  description = "Application Insights name" 
+  value       = local.resource_names.application_insights
 }
 
 output "user_assigned_identity" {
   description = "User Assigned Identity name"
-  value       = module.azure_naming.user_assigned_identity.name
+  value       = local.resource_names.user_assigned_identity
 }
 
 output "servicebus_namespace" {
   description = "Service Bus Namespace name"
-  value       = module.azure_naming.servicebus_namespace.name
+  value       = local.resource_names.servicebus_namespace
 }
 
 output "app_service_plan" {
   description = "App Service Plan name"
-  value       = module.azure_naming.app_service_plan.name
+  value       = local.resource_names.app_service_plan
 }
 
 output "function_app" {
   description = "Function App name"
-  value       = module.azure_naming.function_app.name
+  value       = local.resource_names.function_app
 }
 
 # Storage account with special handling for naming constraints
@@ -41,22 +42,17 @@ output "storage_account" {
 # Diagnostic setting names
 output "diagnostic_names" {
   description = "Standardized diagnostic setting names"
-  value = {
-    storage_account  = "diag-${local.base_name}-storage"
-    function_app     = "diag-${local.base_name}-function"
-    service_bus      = "diag-${local.base_name}-servicebus"
-    log_analytics    = "diag-${local.base_name}-loganalytics"
-    file_service     = "diag-${local.base_name}-fileservice"
-  }
+  value       = local.diagnostic_names
 }
 
 # Base naming components for reference
-output "base_name" {
-  description = "Base name used for resource naming"
-  value       = local.base_name
-}
-
 output "unique_suffix" {
   description = "Unique suffix for globally unique resources"
   value       = local.unique_suffix
+}
+
+# Resource type abbreviations for reference
+output "abbreviations" {
+  description = "Azure CAF resource type abbreviations used"
+  value       = local.resource_abbreviations
 }

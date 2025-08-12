@@ -1,5 +1,5 @@
 # Naming Module Variables
-# This module provides consistent naming for all Azure resources
+# This module provides Azure CAF compliant naming for all resources
 
 variable "workload" {
   description = "Workload name for naming convention"
@@ -15,20 +15,7 @@ variable "environment" {
   }
 }
 
-variable "prefix" {
-  description = "Optional prefix for resource names"
+variable "resource_group_name" {
+  description = "Resource group name used to generate idempotent unique string"
   type        = string
-  default     = ""
-}
-
-variable "suffix" {
-  description = "Optional suffix for resource names"
-  type        = string
-  default     = ""
-}
-
-variable "random_length" {
-  description = "Length of random string for unique names"
-  type        = number
-  default     = 4
 }

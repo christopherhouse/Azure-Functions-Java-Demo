@@ -1,42 +1,48 @@
-# Random ID for unique resource names
-resource "random_id" "this" {
-  byte_length = var.random_length
+# Generate unique string based on resource group name for idempotency
+resource "random_id" "unique_string" {
+  keepers = {
+    resource_group_name = var.resource_group_name
+  }
+  byte_length = 4
 }
 
-# Azure Naming Module for standard naming patterns
-module "azure_naming" {
-  source  = "Azure/naming/azurerm"
-  version = ">= 0.4.0"
-  prefix  = compact([var.prefix, var.workload])
-  suffix  = compact([var.environment, var.suffix])
-}
-
-# Local values for consistent naming
+# Local values for Azure CAF compliant naming
 locals {
-  # Common naming pattern for most resources
-  common_name_parts = compact([
-    var.prefix,
-    var.workload,
-    var.environment,
-    var.suffix
-  ])
+  # Unique suffix based on resource group for idempotency
+  unique_suffix = lower(random_id.unique_string.hex)
   
-  # Base name for resources
-  base_name = join("-", local.common_name_parts)
+  # Azure CAF resource type abbreviations
+  # Standard naming format: [resource-type-abbrev]-[workload]-[environment]-[uniqueString]
+  resource_abbreviations = {
+    function_app            = "func"
+    app_service_plan       = "asp"
+    storage_account        = "st"
+    servicebus_namespace   = "sbns"
+    log_analytics_workspace = "log"
+    application_insights   = "appi"
+    user_assigned_identity = "id"
+  }
   
-  # Unique suffix for resources that need global uniqueness
-  unique_suffix = lower(random_id.this.hex)
+  # Standard resource names following: [abbrev]-[workload]-[environment]-[unique]
+  resource_names = {
+    function_app            = "${local.resource_abbreviations.function_app}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    app_service_plan       = "${local.resource_abbreviations.app_service_plan}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    servicebus_namespace   = "${local.resource_abbreviations.servicebus_namespace}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    log_analytics_workspace = "${local.resource_abbreviations.log_analytics_workspace}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    application_insights   = "${local.resource_abbreviations.application_insights}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    user_assigned_identity = "${local.resource_abbreviations.user_assigned_identity}-${var.workload}-${var.environment}-${local.unique_suffix}"
+  }
   
-  # Storage account name (no hyphens, max 24 chars, globally unique)
-  storage_name_parts = compact([
-    var.prefix != "" ? replace(var.prefix, "-", "") : "",
-    replace(var.workload, "-", ""),
-    replace(var.environment, "-", ""),
-    var.suffix != "" ? replace(var.suffix, "-", "") : ""
-  ])
-  storage_base_name = join("", local.storage_name_parts)
-  storage_name_with_suffix = "${local.storage_base_name}${local.unique_suffix}"
+  # Storage account special handling (no hyphens, max 24 chars, globally unique)
+  storage_base = "${local.resource_abbreviations.storage_account}${var.workload}${var.environment}${local.unique_suffix}"
+  storage_name = length(local.storage_base) > 24 ? substr(local.storage_base, 0, 24) : local.storage_base
   
-  # Truncate storage name to 24 characters if needed
-  storage_name = length(local.storage_name_with_suffix) > 24 ? substr(local.storage_name_with_suffix, 0, 24) : local.storage_name_with_suffix
+  # Diagnostic setting names following: diag-[abbrev]-[workload]-[environment]-[unique]
+  diagnostic_names = {
+    storage_account    = "diag-${local.resource_abbreviations.storage_account}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    function_app       = "diag-${local.resource_abbreviations.function_app}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    service_bus        = "diag-${local.resource_abbreviations.servicebus_namespace}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    log_analytics      = "diag-${local.resource_abbreviations.log_analytics_workspace}-${var.workload}-${var.environment}-${local.unique_suffix}"
+    file_service       = "diag-fileservice-${var.workload}-${var.environment}-${local.unique_suffix}"
+  }
 }

@@ -4,13 +4,12 @@ data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
-# Custom Naming Module for consistent resource naming
+# Custom Naming Module for Azure CAF compliant resource naming
 module "naming" {
-  source      = "./modules/naming"
-  workload    = var.workload
-  environment = var.environment
-  prefix      = var.prefix
-  suffix      = var.suffix
+  source              = "./modules/naming"
+  workload            = var.workload
+  environment         = var.environment
+  resource_group_name = var.resource_group_name
 }
 
 # Monitoring Module (Log Analytics and Application Insights)
