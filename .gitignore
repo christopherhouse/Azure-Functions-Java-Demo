@@ -150,6 +150,8 @@ terraform/environments/*/.terraform.lock.hcl
 terraform/environments/*/terraform.tfstate
 terraform/environments/*/terraform.tfstate.backup
 *.tfvars.backup
+terraform/*.local.auto.tfvars
+terraform/*/*.local.auto.tfvars
 
 # Test artifacts
 test-artifacts/

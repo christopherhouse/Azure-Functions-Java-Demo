@@ -32,6 +32,13 @@ provider "azurerm" {
     }
   }
   resource_provider_registrations = "none"
+  # Toggle OIDC vs Azure CLI/device code auth. In CI we keep OIDC (default true via variable).
+  # Locally create a gitignored local.auto.tfvars with use_oidc=false to rely on az login credentials.
+  use_oidc = var.use_oidc
+
+  # Optional explicit subscription / tenant pinning for local workflows. Leave blank to auto-detect from az cli context.
+  subscription_id = var.subscription_id == "" ? null : var.subscription_id
+  tenant_id       = var.tenant_id == "" ? null : var.tenant_id
 }
 
 # Get current client configuration

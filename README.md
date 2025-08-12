@@ -247,9 +247,24 @@ cd terraform/
 ./deploy.sh dev plan    # Review planned changes
 ./deploy.sh dev apply   # Deploy infrastructure
 
+Windows / PowerShell alternative:
+
+```powershell
+cd terraform
+./deploy.ps1 dev plan
+./deploy.ps1 dev apply
+./deploy.ps1 prod plan
+./deploy.ps1 prod apply
+```
+
 # Deploy production environment
 ./deploy.sh prod plan   # Review planned changes
 ./deploy.sh prod apply  # Deploy infrastructure
+PowerShell variant:
+```powershell
+terraform/deploy.ps1 -Environment dev -Action plan
+terraform/deploy.ps1 -Environment dev -Action apply
+```
 ```
 
 **Infrastructure includes:**
@@ -261,6 +276,44 @@ cd terraform/
 - 🚌 **Service Bus Namespace** with topics and subscriptions
 - ⚡ **App Service Plan** (Consumption/Premium/Isolated options)
 - 🔧 **Function App** with Java 11 runtime and identity-based connections
+
+#### Local Terraform Plan / Apply with Azure CLI (No OIDC)
+
+CI/CD uses OIDC federation by default. Locally you can override this to use your `az login` credentials without touching tracked files.
+
+Steps:
+
+1. Authenticate and (optionally) select subscription:
+  ```powershell
+  az login
+  az account set --subscription <your-subscription-id>   # optional if default is already correct
+  ```
+2. Create a local override file (gitignored):
+  ```powershell
+  Copy-Item terraform\local.example.auto.tfvars terraform\local.auto.tfvars
+  ```
+  Leave `use_oidc = false` in place. Optionally uncomment & set `subscription_id` / `tenant_id` to pin them; otherwise the AzureRM provider will infer from the current CLI context.
+3. Run plan / apply (script wraps backend + var files):
+  ```powershell
+  bash terraform/deploy.sh dev plan    # or prod
+  bash terraform/deploy.sh dev apply
+  ```
+  (Use Git Bash / WSL for `bash`. Alternatively run the Terraform commands directly below.)
+
+Direct Terraform (if you prefer not to use the script):
+```powershell
+cd terraform
+terraform init -backend-config="environments/dev/backend.conf" -reconfigure
+terraform plan -var-file="environments/dev/terraform.tfvars" -out="environments/dev/terraform.plan"
+terraform apply environments/dev/terraform.plan
+```
+
+Cleanup (optional): delete `terraform/local.auto.tfvars` to revert fully to default OIDC behavior.
+
+Notes:
+- `local.auto.tfvars` is ignored via `.gitignore`; never commit it.
+- CI remains unaffected because the default of `use_oidc = true` (defined in `variables.tf`) is still applied when the local override file is absent.
+- You can maintain different local contexts by editing only the override file; no changes to environment tfvars required.
 
 ### Application Deployment
 

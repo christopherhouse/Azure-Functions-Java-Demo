@@ -1,9 +1,23 @@
-# Resource Group Name (must already exist)
-resource_group_name = "RG-JCI-INT-DEMO-DEV"
+# Copy this file to local.auto.tfvars (kept out of git) to use Azure CLI authentication instead of OIDC.
+# Steps:
+# 1. az login
+# 2. (optional) az account set --subscription <subscription-id>
+# 3. cp terraform/local.example.auto.tfvars terraform/local.auto.tfvars (or create manually)
+# 4. Run ./deploy.sh dev plan (or apply)
+
+# Disable OIDC so provider uses CLI token
+use_oidc = false
+
+# Optionally pin a subscription explicitly (otherwise provider detects from CLI context)
+subscription_id = "47046546-29e0-4be5-bdda-78a53f62b992"
+tenant_id       = "76de2d2d-77f8-438d-9a87-01806f2345da"
+
 # Development Environment Configuration
 
 # Environment Configuration
-environment = "dev"
+resource_group_name = "RG-JCI-INT-DEMO-DEV"
+
+environment = "local"
 location    = "eastus2"
 workload    = "azfuncjava"
 prefix      = ""
@@ -82,7 +96,7 @@ function_app_config = {
   app_service_plan = {
     os_type                      = "Linux"
     sku_name                     = "Y1" # Consumption plan for dev
-    worker_count                 = null
+    worker_count                 = 1
     zone_balancing_enabled       = false
     per_site_scaling_enabled     = false
     maximum_elastic_worker_count = null
@@ -128,10 +142,10 @@ function_app_config = {
 
 # Tags
 tags = {
-  Environment = "dev"
+  Environment = "local"
   Project     = "azure-functions-java-demo"
   ManagedBy   = "terraform"
-  CostCenter  = "development"
+  CostCenter  = "local"
   Owner       = "platform-team"
 }
 
