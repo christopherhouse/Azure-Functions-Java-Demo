@@ -5,11 +5,11 @@ variable "resource_group_name" {
 }
 # Environment Configuration
 variable "environment" {
-  description = "Environment name (dev, test, prod, local)"
+  description = "Environment name (dev, test, prd, local)"
   type        = string
   validation {
-    condition     = contains(["dev", "test", "prod", "local"], var.environment)
-    error_message = "Environment must be one of: dev, test, prod, local."
+    condition     = contains(["dev", "test", "prd", "local"], var.environment)
+    error_message = "Environment must be one of: dev, test, prd, local."
   }
 }
 
