@@ -9,6 +9,8 @@ Always reference these instructions first and fallback to search or bash command
 ### Agent Tools
 - context7:
   - Use this MCP server to find up to date documentation on common development tools, libraries and frameworks.
+  - When planning changes, review current documentation via this tool to ensure changes made are following current approaches and best practices
+  - When in doubt,check context7 to see if there is guidance on the topic at hand.
   - Example subjects where context7 can help that are relevant to this repository:
     - Azure
     - Azure Functions
@@ -18,6 +20,11 @@ Always reference these instructions first and fallback to search or bash command
     - azapi for Terraform
     - GitHub Actions
     - Java
+    - Unit testing
+    - Secure development practices
+    - DevOps
+    - DevSecOps
+    - GitHub
 
 ### Application Development
 
