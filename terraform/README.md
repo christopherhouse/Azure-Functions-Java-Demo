@@ -51,7 +51,7 @@ terraform/
 
 3. **Permissions**: Ensure you have Contributor access to the Azure subscription
 
-4. **State Storage**: Create backend storage accounts (see Backend Configuration section)
+> **Note**: Backend storage (storage account and container) is automatically created by the deployment scripts. No manual setup required!
 
 ### Deploy Development Environment
 
@@ -126,33 +126,23 @@ container_name       = "terraform-state"
 key                  = "azure-functions-java-demo/dev/terraform.tfstate"
 ```
 
-#### Setting Up Backend Storage
+#### Automated Backend Storage Setup
 
-Before deploying, create the backend storage account:
+The deployment scripts automatically create the required backend storage infrastructure:
+
+- **Resource Group**: For storing Terraform state resources
+- **Storage Account**: Secure storage with proper configuration
+- **Container**: Blob container for state files
+
+The bootstrap process runs automatically when you use the deployment scripts. If you need to run it manually:
 
 ```bash
-# Set variables
-ENVIRONMENT="dev"  # or "prod"
-LOCATION="East US 2"
-RESOURCE_GROUP="rg-terraform-state-${ENVIRONMENT}"
-STORAGE_ACCOUNT="stterraformstate${ENVIRONMENT}001"
-
-# Create resource group
-az group create --name $RESOURCE_GROUP --location "$LOCATION"
-
-# Create storage account
-az storage account create \
-  --name $STORAGE_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --location "$LOCATION" \
-  --sku Standard_LRS \
-  --kind StorageV2
-
-# Create container
-az storage container create \
-  --name terraform-state \
-  --account-name $STORAGE_ACCOUNT
+# Bootstrap backend storage for specific environment
+./bootstrap-backend.sh dev    # For development environment
+./bootstrap-backend.sh prod   # For production environment
 ```
+
+The bootstrap script is **idempotent** - it's safe to run multiple times and will only create resources that don't already exist.
 
 ## 🔐 Security Features
 

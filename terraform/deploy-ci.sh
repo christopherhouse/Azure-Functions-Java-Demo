@@ -34,6 +34,16 @@ setup_oidc_env() {
   export TF_IN_AUTOMATION=true
 }
 
+bootstrap() {
+  local env=$1
+  log "bootstrap backend storage ($env)"
+  if [[ -f "$TERRAFORM_DIR/bootstrap-backend.sh" ]]; then
+    (cd "$TERRAFORM_DIR" && ./bootstrap-backend.sh "$env")
+  else
+    log "bootstrap script not found, assuming backend exists"
+  fi
+}
+
 init() {
   local env=$1
   log "terraform init ($env)"
@@ -73,6 +83,7 @@ main() {
   [[ -n "$env" ]] || { usage; exit 1; }
   validate_env "$env"
   setup_oidc_env
+  bootstrap "$env"
   init "$env"
   case "$action" in
     plan) plan "$env";;
