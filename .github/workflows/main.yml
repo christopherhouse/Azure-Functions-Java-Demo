@@ -179,10 +179,15 @@ jobs:
 
   deploy-prod:
     name: Deploy to Production
-    needs: build
+    needs: [build, deploy-dev]
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && inputs.deploy_to_prod)
+      always() && 
+      needs.build.result == 'success' &&
+      (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy-dev.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_to_prod && inputs.deploy_to_dev && needs.deploy-dev.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_to_prod && !inputs.deploy_to_dev && needs.deploy-dev.result == 'skipped')
+      )
     uses: ./.github/workflows/deploy.yml
     with:
       environment: prod
