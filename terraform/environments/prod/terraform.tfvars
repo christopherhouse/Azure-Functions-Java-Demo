@@ -68,7 +68,7 @@ service_bus_config = {
       subscriptions = {
         processing = {
           max_delivery_count                   = 5      # Lower retry count for production
-          lock_duration                        = "PT5M" # Longer lock for production
+          lock_duration                        = "PT1M" # 1 minute lock duration as requested
           requires_session                     = false
           default_message_ttl                  = "P7D"
           dead_lettering_on_message_expiration = true
@@ -79,7 +79,7 @@ service_bus_config = {
         # Additional subscription for dead letter processing
         dead-letter-processor = {
           max_delivery_count                   = 3
-          lock_duration                        = "PT10M"
+          lock_duration                        = "PT1M" # 1 minute lock duration as requested
           requires_session                     = false
           default_message_ttl                  = "P14D"
           dead_lettering_on_message_expiration = false
@@ -117,7 +117,7 @@ service_bus_config = {
 # Function App Configuration
 function_app_config = {
   app_service_plan = {
-    os_type                      = "Linux"
+    os_type                      = "Windows"
     sku_name                     = "EP1" # Premium plan for production
     worker_count                 = 1
     zone_balancing_enabled       = true
@@ -126,7 +126,7 @@ function_app_config = {
   }
 
   function_app = {
-    os_type                                        = "Linux"
+    os_type                                        = "Windows"
     https_only                                     = true
     client_certificate_enabled                     = false
     public_network_access_enabled                  = true

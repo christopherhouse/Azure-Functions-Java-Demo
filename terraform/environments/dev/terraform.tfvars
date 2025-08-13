@@ -80,7 +80,7 @@ service_bus_config = {
 # Function App Configuration
 function_app_config = {
   app_service_plan = {
-    os_type                      = "Linux"
+    os_type                      = "Windows"
     sku_name                     = "Y1" # Consumption plan for dev
     worker_count                 = null
     zone_balancing_enabled       = false
@@ -89,7 +89,7 @@ function_app_config = {
   }
 
   function_app = {
-    os_type                                        = "Linux"
+    os_type                                        = "Windows"
     https_only                                     = true
     client_certificate_enabled                     = false
     public_network_access_enabled                  = true

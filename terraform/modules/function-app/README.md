@@ -5,7 +5,7 @@ This module manages the Azure Function App and its hosting infrastructure, inclu
 ## Resources Created
 
 - App Service Plan
-- Function App with Java runtime
+- Function App with Java runtime (Windows)
 - Site configuration and application settings
 
 ## Input Variables
@@ -90,7 +90,7 @@ function_app_config = {
 
 ## Features
 
-- **Java Runtime**: Configured for Java 11/17 on Linux
+- **Java Runtime**: Configured for Java 11/17 on Windows
 - **Managed Identity**: Both system-assigned and user-assigned identities
 - **Application Insights**: Integrated monitoring and telemetry
 - **Security**: HTTPS-only, TLS 1.2 minimum, FTP disabled
@@ -110,7 +110,7 @@ module "function_app" {
       location                     = "East US 2"
       resource_group_name         = "example-rg"
       enable_telemetry            = true
-      os_type                     = "Linux"
+      os_type                     = "Windows"
       sku_name                    = "Y1"
       worker_count                = null
       zone_balancing_enabled      = false

@@ -41,8 +41,8 @@ The infrastructure is organized into the following modules:
 ### function-app
 **Purpose**: Manages the Function App and its hosting infrastructure.
 **Resources**:
-- App Service Plan
-- Function App with Java runtime
+- App Service Plan (Windows)
+- Function App with Java runtime (Windows)
 - Application settings and configuration
 
 **Input**: Complex object containing Function App configuration including SKU, runtime settings, and application configuration.
