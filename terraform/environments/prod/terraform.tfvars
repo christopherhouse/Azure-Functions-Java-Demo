@@ -140,7 +140,7 @@ function_app_config = {
     site_config = {
       java_version        = "11"
       # always_on is only for Premium plans, not used for Consumption
-      # always_on           = true
+      always_on           = false
       http2_enabled       = true
       minimum_tls_version = "1.2"
       ftps_state          = "Disabled"
