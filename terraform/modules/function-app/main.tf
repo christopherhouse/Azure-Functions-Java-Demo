@@ -2,12 +2,12 @@ resource "azurerm_service_plan" "asp" {
   name                = var.function_app_config.app_service_plan.name
   location            = var.function_app_config.app_service_plan.location
   resource_group_name = var.function_app_config.app_service_plan.resource_group_name
-  os_type             = "Linux"
-  sku_name            = "Y1"
+  os_type             = var.function_app_config.app_service_plan.os_type
+  sku_name            = var.function_app_config.app_service_plan.sku_name
   tags                = var.function_app_config.app_service_plan.tags
 }
 
-resource "azurerm_linux_function_app" "fa" {
+resource "azurerm_windows_function_app" "fa" {
   name                = var.function_app_config.function_app.name
   location            = var.function_app_config.function_app.location
   resource_group_name = var.function_app_config.function_app.resource_group_name
@@ -39,7 +39,7 @@ resource "azurerm_linux_function_app" "fa" {
 resource "azurerm_monitor_diagnostic_setting" "fa_diag" {
   count = var.function_app_config.function_app.enable_diagnostic_settings ? 1 : 0
   name                       = "diag-functionapp"
-  target_resource_id         = azurerm_linux_function_app.fa.id
+  target_resource_id         = azurerm_windows_function_app.fa.id
   log_analytics_workspace_id = var.function_app_config.function_app.log_analytics_workspace_id
   enabled_log {
     category = "FunctionAppLogs"

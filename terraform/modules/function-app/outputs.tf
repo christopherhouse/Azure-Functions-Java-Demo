@@ -9,15 +9,15 @@ output "app_service_plan_id" {
 
 output "function_app_id" {
   description = "The resource ID of the Function App"
-  value       = azurerm_linux_function_app.fa.id
+  value       = azurerm_windows_function_app.fa.id
 }
 
 output "function_app_identity_principal_id" {
   description = "The principal ID of the Function App system assigned identity"
-  value       = azurerm_linux_function_app.fa.identity[0].principal_id
+  value       = azurerm_windows_function_app.fa.identity[0].principal_id
 }
 
 output "function_app_name" {
   description = "The name of the Function App"
-  value       = azurerm_linux_function_app.fa.name
+  value       = azurerm_windows_function_app.fa.name
 }
