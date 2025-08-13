@@ -49,8 +49,8 @@ storage_config = {
 # Service Bus Configuration
 service_bus_config = {
   enable_telemetry              = true
-  sku                           = "Premium"
-  capacity                      = 1
+  sku                           = "Standard"
+  capacity                      = null
   public_network_access_enabled = true
   minimum_tls_version           = "1.2"
 
