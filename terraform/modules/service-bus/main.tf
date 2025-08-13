@@ -28,8 +28,8 @@ resource "azurerm_servicebus_topic" "topics" {
   requires_duplicate_detection            = each.value.requires_duplicate_detection
   default_message_ttl                     = each.value.default_message_ttl
   auto_delete_on_idle                     = each.value.auto_delete_on_idle
-  enable_partitioning                     = each.value.enable_partitioning
-  enable_express                          = each.value.enable_express
+  partitioning_enabled                    = each.value.enable_partitioning
+  express_enabled                         = each.value.enable_express
   support_ordering                        = each.value.support_ordering
   duplicate_detection_history_time_window = each.value.duplicate_detection_history_time_window
 }
@@ -55,7 +55,7 @@ resource "azurerm_servicebus_subscription" "subscriptions" {
   default_message_ttl                       = each.value.subscription.default_message_ttl
   dead_lettering_on_message_expiration      = each.value.subscription.dead_lettering_on_message_expiration
   dead_lettering_on_filter_evaluation_error = each.value.subscription.dead_lettering_on_filter_evaluation_error
-  enable_batched_operations                 = each.value.subscription.enable_batched_operations
+  batched_operations_enabled                = each.value.subscription.enable_batched_operations
   auto_delete_on_idle                       = each.value.subscription.auto_delete_on_idle
 }
 
@@ -71,8 +71,7 @@ resource "azurerm_monitor_diagnostic_setting" "sb_diag" {
     category = "OperationalLogs"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
-    enabled  = true
   }
 }
