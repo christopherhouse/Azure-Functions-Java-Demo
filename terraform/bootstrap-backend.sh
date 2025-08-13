@@ -111,7 +111,7 @@ ensure_container() {
     
     log_info "Checking if container '$container_name' exists..."
     
-    if az storage container show --name "$container_name" --account-name "$storage_name" &> /dev/null; then
+    if az storage container show --name "$container_name" --account-name "$storage_name" --auth-mode login &> /dev/null; then
         log_success "Container '$container_name' exists"
     else
         log_error "Container '$container_name' does not exist. Please provision it before running this script."
@@ -126,7 +126,7 @@ validate_setup() {
     
     log_info "Validating backend storage setup..."
     
-    if az storage blob list --container-name "$container_name" --account-name "$storage_name" &> /dev/null; then
+    if az storage blob list --container-name "$container_name" --account-name "$storage_name" --auth-mode login &> /dev/null; then
         log_success "Backend storage is properly configured and accessible"
     else
         log_error "Failed to access the container. Please check permissions."
