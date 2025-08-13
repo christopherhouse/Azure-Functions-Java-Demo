@@ -118,11 +118,11 @@ service_bus_config = {
 function_app_config = {
   app_service_plan = {
     os_type                      = "Windows"
-    sku_name                     = "Y1" # Premium plan for production
+    sku_name                     = "Y1" # Consumption plan for production (Windows, Y1)
     worker_count                 = 1
     zone_balancing_enabled       = false
     per_site_scaling_enabled     = false
-#    maximum_elastic_worker_count = 10
+    # maximum_elastic_worker_count is only for Premium plans, not used for Consumption
   }
 
   function_app = {
@@ -135,11 +135,12 @@ function_app_config = {
 
     application_insights_type = "web"
 
-  storage_uses_managed_identity = false
+    storage_uses_managed_identity = false
 
     site_config = {
       java_version        = "11"
-      always_on           = true # Enable always on for Premium plan
+      # always_on is only for Premium plans, not used for Consumption
+      # always_on           = true
       http2_enabled       = true
       minimum_tls_version = "1.2"
       ftps_state          = "Disabled"
@@ -148,19 +149,19 @@ function_app_config = {
         # "203.0.113.0/24",
         # "198.51.100.0/24"
       ]
-      runtime_scale_monitoring_enabled = true
-      use_32_bit_worker                = false
-      websockets_enabled               = false
-      vnet_route_all_enabled           = false
+  runtime_scale_monitoring_enabled = true
+  use_32_bit_worker                = false
+  websockets_enabled               = false
+  vnet_route_all_enabled           = false
     }
 
     app_settings = {
-      FUNCTIONS_WORKER_RUNTIME    = "java"
-      FUNCTIONS_EXTENSION_VERSION = "~4"
-      WEBSITE_RUN_FROM_PACKAGE    = "1"
+  FUNCTIONS_WORKER_RUNTIME    = "java"
+  FUNCTIONS_EXTENSION_VERSION = "~4"
+  WEBSITE_RUN_FROM_PACKAGE    = "1"
 
-      # Java specific settings
-      JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
+  # Java specific settings
+  JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
     }
 
     enable_diagnostic_settings = true
