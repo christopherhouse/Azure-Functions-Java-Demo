@@ -38,7 +38,7 @@ bootstrap() {
   local env=$1
   log "bootstrap backend storage ($env)"
   if [[ -f "$TERRAFORM_DIR/bootstrap-backend.sh" ]]; then
-    (cd "$TERRAFORM_DIR" && ./bootstrap-backend.sh "$env")
+    (cd "$TERRAFORM_DIR" && chmod +x bootstrap-backend.sh && ./bootstrap-backend.sh "$env")
   else
     log "bootstrap script not found, assuming backend exists"
   fi
