@@ -27,7 +27,7 @@ monitoring_config = {
 # Storage Account Configuration
 storage_config = {
   account_tier                  = "Standard"
-  account_replication_type      = "GRS" # Geo redundancy for production
+  account_replication_type      = "LRS" # no Zone redundancy for production
   min_tls_version               = "TLS1_2"
   https_traffic_only_enabled    = true
   public_network_access_enabled = true
@@ -57,8 +57,8 @@ service_bus_config = {
   topics = {
     received-orders = {
       max_size_in_megabytes                   = 5120 # 5GB for production
-      requires_duplicate_detection            = true # Enable duplicate detection
-      enable_partitioning                     = true
+      requires_duplicate_detection            = false # Enable duplicate detection
+      enable_partitioning                     = false
       enable_express                          = false  # Don't use express for critical messages
       support_ordering                        = true   # Enable ordering for production
       default_message_ttl                     = "P7D"  # 7 days TTL
@@ -118,11 +118,11 @@ service_bus_config = {
 function_app_config = {
   app_service_plan = {
     os_type                      = "Windows"
-    sku_name                     = "EP1" # Premium plan for production
+    sku_name                     = "Y1" # Premium plan for production
     worker_count                 = 1
-    zone_balancing_enabled       = true
+    zone_balancing_enabled       = false
     per_site_scaling_enabled     = false
-    maximum_elastic_worker_count = 10
+#    maximum_elastic_worker_count = 10
   }
 
   function_app = {
