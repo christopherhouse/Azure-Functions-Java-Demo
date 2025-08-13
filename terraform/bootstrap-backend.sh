@@ -48,7 +48,7 @@ show_usage() {
     echo "This script will:"
     echo "  1. Read the backend configuration for the specified environment"
     echo "  2. Check if the storage account and container exist"
-    echo "  3. Create them if they don't exist"
+    echo "  3. Fail if they do not exist"
     echo "  4. Ensure proper permissions are set"
 }
 
@@ -104,59 +104,6 @@ check_azure_login() {
     log_info "Using Azure subscription: $account_name ($subscription_id)"
 }
 
-# Function to create resource group if it doesn't exist
-ensure_resource_group() {
-    local rg_name=$1
-    
-    log_info "Checking if resource group '$rg_name' exists..."
-    
-    if az group show --name "$rg_name" &> /dev/null; then
-        log_success "Resource group '$rg_name' already exists"
-    else
-        log_info "Creating resource group '$rg_name'..."
-        
-        # Use a default location if not specified
-        local location="East US 2"
-        
-        az group create \
-            --name "$rg_name" \
-            --location "$location" \
-            --tags "Purpose=TerraformState" "Environment=$environment" \
-            > /dev/null
-        
-        log_success "Created resource group '$rg_name' in $location"
-    fi
-}
-
-# Function to create storage account if it doesn't exist
-ensure_storage_account() {
-    local rg_name=$1
-    local storage_name=$2
-    
-    log_info "Checking if storage account '$storage_name' exists..."
-    
-    if az storage account show --name "$storage_name" --resource-group "$rg_name" &> /dev/null; then
-        log_success "Storage account '$storage_name' already exists"
-    else
-        log_info "Creating storage account '$storage_name'..."
-        
-        az storage account create \
-            --name "$storage_name" \
-            --resource-group "$rg_name" \
-            --location "$(az group show --name "$rg_name" --query location -o tsv)" \
-            --sku Standard_LRS \
-            --kind StorageV2 \
-            --access-tier Hot \
-            --https-only true \
-            --allow-blob-public-access false \
-            --min-tls-version TLS1_2 \
-            --tags "Purpose=TerraformState" "Environment=$environment" \
-            > /dev/null
-        
-        log_success "Created storage account '$storage_name'"
-    fi
-}
-
 # Function to create container if it doesn't exist
 ensure_container() {
     local storage_name=$1
@@ -164,22 +111,11 @@ ensure_container() {
     
     log_info "Checking if container '$container_name' exists..."
     
-    # Get storage account key
-    local storage_key=$(az storage account keys list --account-name "$storage_name" --resource-group "$BACKEND_resource_group_name" --query "[0].value" -o tsv)
-    
-    if az storage container show --name "$container_name" --account-name "$storage_name" --account-key "$storage_key" &> /dev/null; then
-        log_success "Container '$container_name' already exists"
+    if az storage container show --name "$container_name" --account-name "$storage_name" &> /dev/null; then
+        log_success "Container '$container_name' exists"
     else
-        log_info "Creating container '$container_name'..."
-        
-        az storage container create \
-            --name "$container_name" \
-            --account-name "$storage_name" \
-            --account-key "$storage_key" \
-            --public-access off \
-            > /dev/null
-        
-        log_success "Created container '$container_name'"
+        log_error "Container '$container_name' does not exist. Please provision it before running this script."
+        exit 1
     fi
 }
 
@@ -190,10 +126,7 @@ validate_setup() {
     
     log_info "Validating backend storage setup..."
     
-    # Try to list blobs in the container to ensure everything is working
-    local storage_key=$(az storage account keys list --account-name "$storage_name" --resource-group "$BACKEND_resource_group_name" --query "[0].value" -o tsv)
-    
-    if az storage blob list --container-name "$container_name" --account-name "$storage_name" --account-key "$storage_key" &> /dev/null; then
+    if az storage blob list --container-name "$container_name" --account-name "$storage_name" &> /dev/null; then
         log_success "Backend storage is properly configured and accessible"
     else
         log_error "Failed to access the container. Please check permissions."
@@ -225,11 +158,8 @@ main() {
     # Parse backend configuration
     parse_backend_config "$environment"
     
-    # Create resources
-    ensure_resource_group "$BACKEND_resource_group_name"
-    ensure_storage_account "$BACKEND_resource_group_name" "$BACKEND_storage_account_name"
+    # Ensure container exists
     ensure_container "$BACKEND_storage_account_name" "$BACKEND_container_name"
-    
     # Validate the setup
     validate_setup "$BACKEND_storage_account_name" "$BACKEND_container_name"
     
