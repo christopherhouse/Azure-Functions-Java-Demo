@@ -158,7 +158,9 @@ module "function_app" {
         var.function_app_config.function_app.storage_uses_managed_identity ? {
           AzureWebJobsStorage__accountName = module.storage.storage_account_name
           AzureWebJobsStorage__credential  = "managedidentity"
-          AzureWebJobsStorage__clientId    = module.identity.identity_client_id
+          # Note: Removed AzureWebJobsStorage__clientId to use system-assigned identity
+          # System-assigned identity has all required storage permissions (Storage Blob Data Owner, 
+          # Storage Queue Data Contributor, Storage Table Data Contributor)
           } : {
           AzureWebJobsStorage = "DefaultEndpointsProtocol=https;AccountName=${module.storage.storage_account_name};AccountKey=${module.storage.primary_access_key};EndpointSuffix=core.windows.net"
         }
