@@ -170,10 +170,10 @@ ServiceBusConnection__clientId = "managed-identity-client-id"
 Function App storage uses managed identity instead of connection strings:
 
 ```java
-// Storage account settings
+// Storage account settings (uses system-assigned identity)
 AzureWebJobsStorage__accountName = "storageaccountname"
 AzureWebJobsStorage__credential = "managedidentity"
-AzureWebJobsStorage__clientId = "managed-identity-client-id"
+// Note: No AzureWebJobsStorage__clientId - defaults to system-assigned identity
 ```
 
 ## 📊 Monitoring and Diagnostics
