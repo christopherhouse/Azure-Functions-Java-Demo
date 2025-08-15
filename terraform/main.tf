@@ -141,8 +141,7 @@ module "function_app" {
       application_insights_type                      = var.function_app_config.function_app.application_insights_type
       application_insights_workspace_id              = module.monitoring.log_analytics_id
       storage_account_name                           = module.storage.storage_account_name
-      storage_account_access_key                     = var.function_app_config.function_app.storage_uses_managed_identity ? null : module.storage.primary_access_key
-      storage_uses_managed_identity                  = var.function_app_config.function_app.storage_uses_managed_identity
+      storage_account_access_key                     = null  # Always null for managed identity
       key_vault_reference_identity_id                = module.identity.identity_resource_id
       site_config                                    = var.function_app_config.function_app.site_config
       app_settings = merge(
@@ -154,15 +153,13 @@ module "function_app" {
           ServiceBusConnection__credential              = "managedidentity"
           ServiceBusConnection__clientId                = module.identity.identity_client_id
         },
-        # Conditionally set AzureWebJobsStorage based on managed identity usage
-        var.function_app_config.function_app.storage_uses_managed_identity ? {
+        # AzureWebJobsStorage using system-assigned managed identity
+        {
           AzureWebJobsStorage__accountName = module.storage.storage_account_name
           AzureWebJobsStorage__credential  = "managedidentity"
-          # Note: Removed AzureWebJobsStorage__clientId to use system-assigned identity
+          # Note: No AzureWebJobsStorage__clientId - defaults to system-assigned identity
           # System-assigned identity has all required storage permissions (Storage Blob Data Owner, 
           # Storage Queue Data Contributor, Storage Table Data Contributor)
-          } : {
-          AzureWebJobsStorage = "DefaultEndpointsProtocol=https;AccountName=${module.storage.storage_account_name};AccountKey=${module.storage.primary_access_key};EndpointSuffix=core.windows.net"
         }
       )
       enable_diagnostic_settings = var.function_app_config.function_app.enable_diagnostic_settings
