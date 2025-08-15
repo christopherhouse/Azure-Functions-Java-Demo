@@ -193,8 +193,8 @@ The application supports both identity-based authentication (production) and con
 
 #### Identity-Based Configuration (Production/Deployed)
 The deployed Function App uses managed identity for secure, credential-free access:
-- **Service Bus**: Uses `ServiceBusConnection__fullyQualifiedNamespace` and `ServiceBusConnection__credential=managedidentity`
-- **Storage**: Uses `AzureWebJobsStorage__accountName` and `AzureWebJobsStorage__credential=managedidentity`
+- **Service Bus**: Uses `ServiceBusConnection__fullyQualifiedNamespace`, `ServiceBusConnection__credential=managedidentity`, and `ServiceBusConnection__clientId` (user-assigned identity)
+- **Storage**: Uses `AzureWebJobsStorage__accountName` and `AzureWebJobsStorage__credential=managedidentity` (system-assigned identity - no clientId needed)
 
 #### Connection String Configuration (Local Development)
 For local development, use the traditional connection string approach:

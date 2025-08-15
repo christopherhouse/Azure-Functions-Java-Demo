@@ -25,8 +25,8 @@ resource "azurerm_windows_function_app" "fa" {
 
   storage_account_name = var.function_app_config.function_app.storage_account_name
   
-  # Only set storage access key when NOT using managed identity
-  storage_account_access_key = var.function_app_config.function_app.storage_uses_managed_identity ? null : var.function_app_config.function_app.storage_account_access_key
+  # Always use managed identity for storage (no access key)
+  storage_account_access_key = null
 
   site_config {
     application_stack {

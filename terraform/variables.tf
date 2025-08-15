@@ -152,8 +152,6 @@ variable "function_app_config" {
 
       application_insights_type = string
 
-      storage_uses_managed_identity = bool
-
       site_config = object({
         java_version                     = string
         always_on                        = bool
