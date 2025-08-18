@@ -9,7 +9,7 @@ resource "azurerm_storage_account" "this" {
   account_kind                  = var.account_kind
   public_network_access_enabled = var.public_network_access_enabled
   shared_access_key_enabled     = var.shared_access_key_enabled
-  tags                         = var.tags
+  tags                          = var.tags
 
   dynamic "identity" {
     for_each = length(var.user_assigned_resource_ids) > 0 ? [1] : []
@@ -32,8 +32,8 @@ resource "azurerm_storage_account" "this" {
 
 # Diagnostic setting for the file service (Azure Files)
 resource "azurerm_monitor_diagnostic_setting" "file_service" {
-  count                      = var.enable_diagnostic_settings ? 1 : 0
-  name                       = "diag-fileservice"
+  count = var.enable_diagnostic_settings ? 1 : 0
+  name  = "diag-fileservice"
   # File service resource ID: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/fileServices/default
   target_resource_id         = "${azurerm_storage_account.this.id}/fileServices/default"
   log_analytics_workspace_id = var.log_analytics_workspace_id

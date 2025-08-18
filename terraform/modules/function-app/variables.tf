@@ -41,7 +41,7 @@ variable "function_app_config" {
 
       # Storage account configuration
       storage_account_name            = string
-      storage_account_access_key      = optional(string)  # Always null for managed identity
+      storage_account_access_key      = optional(string) # Always null for managed identity
       key_vault_reference_identity_id = string
 
       # Site configuration

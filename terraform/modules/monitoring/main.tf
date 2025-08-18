@@ -12,7 +12,7 @@ module "log_analytics" {
   log_analytics_workspace_sku               = var.monitoring_config.log_analytics.sku
 
   log_analytics_workspace_internet_ingestion_enabled = true
-  log_analytics_workspace_internet_query_enabled = true
+  log_analytics_workspace_internet_query_enabled     = true
 
   tags = var.monitoring_config.log_analytics.tags
 }

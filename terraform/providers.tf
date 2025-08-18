@@ -32,6 +32,8 @@ provider "azurerm" {
     }
   }
   resource_provider_registrations = "none"
+  # Use Azure AD authentication for Storage APIs when shared access keys are disabled
+  storage_use_azuread = true
   # Toggle OIDC vs Azure CLI/device code auth. In CI we keep OIDC (default true via variable).
   # Locally create a gitignored local.auto.tfvars with use_oidc=false to rely on az login credentials.
   use_oidc = var.use_oidc
