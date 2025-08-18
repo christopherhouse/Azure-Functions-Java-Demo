@@ -79,6 +79,14 @@ module "storage" {
     },
     {
       principal_id         = module.identity.identity_principal_id
+      role_definition_name = "Storage Queue Data Contributor"
+    },
+    {
+      principal_id         = module.identity.identity_principal_id
+      role_definition_name = "Storage Table Data Contributor"
+    },
+    {
+      principal_id         = module.identity.identity_principal_id
       role_definition_name = "Storage Account Contributor"
     }
   ]
@@ -153,13 +161,11 @@ module "function_app" {
           ServiceBusConnection__credential              = "managedidentity"
           ServiceBusConnection__clientId                = module.identity.identity_client_id
         },
-        # AzureWebJobsStorage using system-assigned managed identity
+        # AzureWebJobsStorage using user-assigned managed identity
         {
           AzureWebJobsStorage__accountName = module.storage.storage_account_name
           AzureWebJobsStorage__credential  = "managedidentity"
-          # Note: No AzureWebJobsStorage__clientId - defaults to system-assigned identity
-          # System-assigned identity has all required storage permissions (Storage Blob Data Owner, 
-          # Storage Queue Data Contributor, Storage Table Data Contributor)
+          AzureWebJobsStorage__clientId    = module.identity.identity_client_id
         }
       )
       enable_diagnostic_settings = var.function_app_config.function_app.enable_diagnostic_settings
@@ -213,29 +219,8 @@ resource "azurerm_role_assignment" "function_app_system_service_bus_receiver" {
 }
 
 # RBAC assignments for Function App system-assigned identity to access storage account
-resource "azurerm_role_assignment" "function_app_system_storage_blob_data_owner" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
-
-resource "azurerm_role_assignment" "function_app_system_storage_queue_data_contributor" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Queue Data Contributor"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
-
-resource "azurerm_role_assignment" "function_app_system_storage_table_data_contributor" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Table Data Contributor"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
+# NOTE: These are not needed when using user-assigned managed identity for AzureWebJobsStorage
+# The user-assigned identity has all required storage permissions assigned in the storage module
 
 # Random wait to ensure RBAC propagation
 resource "time_sleep" "rbac_propagation" {
@@ -246,8 +231,6 @@ resource "time_sleep" "rbac_propagation" {
     azurerm_role_assignment.identity_service_bus_receiver,
     azurerm_role_assignment.function_app_system_service_bus_sender,
     azurerm_role_assignment.function_app_system_service_bus_receiver,
-    azurerm_role_assignment.function_app_system_storage_blob_data_owner,
-    azurerm_role_assignment.function_app_system_storage_queue_data_contributor,
-    azurerm_role_assignment.function_app_system_storage_table_data_contributor
+    module.storage  # Storage RBAC assignments are handled in the storage module
   ]
 }
