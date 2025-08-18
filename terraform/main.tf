@@ -79,6 +79,14 @@ module "storage" {
     },
     {
       principal_id         = module.identity.identity_principal_id
+      role_definition_name = "Storage Queue Data Contributor"
+    },
+    {
+      principal_id         = module.identity.identity_principal_id
+      role_definition_name = "Storage Table Data Contributor"
+    },
+    {
+      principal_id         = module.identity.identity_principal_id
       role_definition_name = "Storage Account Contributor"
     }
   ]
@@ -141,8 +149,7 @@ module "function_app" {
       application_insights_type                      = var.function_app_config.function_app.application_insights_type
       application_insights_workspace_id              = module.monitoring.log_analytics_id
       storage_account_name                           = module.storage.storage_account_name
-      storage_account_access_key                     = var.function_app_config.function_app.storage_uses_managed_identity ? null : module.storage.primary_access_key
-      storage_uses_managed_identity                  = var.function_app_config.function_app.storage_uses_managed_identity
+      storage_account_access_key                     = null  # Always null for managed identity
       key_vault_reference_identity_id                = module.identity.identity_resource_id
       site_config                                    = var.function_app_config.function_app.site_config
       app_settings = merge(
@@ -154,13 +161,11 @@ module "function_app" {
           ServiceBusConnection__credential              = "managedidentity"
           ServiceBusConnection__clientId                = module.identity.identity_client_id
         },
-        # Conditionally set AzureWebJobsStorage based on managed identity usage
-        var.function_app_config.function_app.storage_uses_managed_identity ? {
+        # AzureWebJobsStorage using user-assigned managed identity
+        {
           AzureWebJobsStorage__accountName = module.storage.storage_account_name
           AzureWebJobsStorage__credential  = "managedidentity"
           AzureWebJobsStorage__clientId    = module.identity.identity_client_id
-          } : {
-          AzureWebJobsStorage = "DefaultEndpointsProtocol=https;AccountName=${module.storage.storage_account_name};AccountKey=${module.storage.primary_access_key};EndpointSuffix=core.windows.net"
         }
       )
       enable_diagnostic_settings = var.function_app_config.function_app.enable_diagnostic_settings
@@ -214,29 +219,8 @@ resource "azurerm_role_assignment" "function_app_system_service_bus_receiver" {
 }
 
 # RBAC assignments for Function App system-assigned identity to access storage account
-resource "azurerm_role_assignment" "function_app_system_storage_blob_data_owner" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
-
-resource "azurerm_role_assignment" "function_app_system_storage_queue_data_contributor" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Queue Data Contributor"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
-
-resource "azurerm_role_assignment" "function_app_system_storage_table_data_contributor" {
-  scope                = module.storage.storage_account_id
-  role_definition_name = "Storage Table Data Contributor"
-  principal_id         = module.function_app.function_app_identity_principal_id
-
-  depends_on = [module.storage, module.function_app]
-}
+# NOTE: These are not needed when using user-assigned managed identity for AzureWebJobsStorage
+# The user-assigned identity has all required storage permissions assigned in the storage module
 
 # Random wait to ensure RBAC propagation
 resource "time_sleep" "rbac_propagation" {
@@ -247,8 +231,6 @@ resource "time_sleep" "rbac_propagation" {
     azurerm_role_assignment.identity_service_bus_receiver,
     azurerm_role_assignment.function_app_system_service_bus_sender,
     azurerm_role_assignment.function_app_system_service_bus_receiver,
-    azurerm_role_assignment.function_app_system_storage_blob_data_owner,
-    azurerm_role_assignment.function_app_system_storage_queue_data_contributor,
-    azurerm_role_assignment.function_app_system_storage_table_data_contributor
+    module.storage  # Storage RBAC assignments are handled in the storage module
   ]
 }

@@ -52,7 +52,7 @@ function_app_config = {
     
     # Storage configuration
     storage_account_name = string
-    storage_uses_managed_identity = bool
+    # Note: Always uses managed identity - no access key needed
     key_vault_reference_identity_id = string
     
     # Site configuration
