@@ -56,7 +56,7 @@ service_bus_config = {
 
   topics = {
     received-orders = {
-      max_size_in_megabytes                   = 5120 # 5GB for production
+      max_size_in_megabytes                   = 5120  # 5GB for production
       requires_duplicate_detection            = false # Enable duplicate detection
       enable_partitioning                     = false
       enable_express                          = false  # Don't use express for critical messages
@@ -117,11 +117,11 @@ service_bus_config = {
 # Function App Configuration
 function_app_config = {
   app_service_plan = {
-    os_type                      = "Windows"
-    sku_name                     = "Y1" # Consumption plan for production (Windows, Y1)
-    worker_count                 = 1
-    zone_balancing_enabled       = false
-    per_site_scaling_enabled     = false
+    os_type                  = "Windows"
+    sku_name                 = "Y1" # Consumption plan for production (Windows, Y1)
+    worker_count             = 1
+    zone_balancing_enabled   = false
+    per_site_scaling_enabled = false
     # maximum_elastic_worker_count is only for Premium plans, not used for Consumption
   }
 
@@ -136,7 +136,7 @@ function_app_config = {
     application_insights_type = "web"
 
     site_config = {
-      java_version        = "11"
+      java_version = "11"
       # always_on is only for Premium plans, not used for Consumption
       always_on           = false
       http2_enabled       = true
@@ -147,19 +147,19 @@ function_app_config = {
         # "203.0.113.0/24",
         # "198.51.100.0/24"
       ]
-  runtime_scale_monitoring_enabled = true
-  use_32_bit_worker                = false
-  websockets_enabled               = false
-  vnet_route_all_enabled           = false
+      runtime_scale_monitoring_enabled = true
+      use_32_bit_worker                = false
+      websockets_enabled               = false
+      vnet_route_all_enabled           = false
     }
 
     app_settings = {
-  FUNCTIONS_WORKER_RUNTIME    = "java"
-  FUNCTIONS_EXTENSION_VERSION = "~4"
-  WEBSITE_RUN_FROM_PACKAGE    = "1"
+      FUNCTIONS_WORKER_RUNTIME    = "java"
+      FUNCTIONS_EXTENSION_VERSION = "~4"
+      WEBSITE_RUN_FROM_PACKAGE    = "1"
 
-  # Java specific settings
-  JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
+      # Java specific settings
+      JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
     }
 
     enable_diagnostic_settings = true

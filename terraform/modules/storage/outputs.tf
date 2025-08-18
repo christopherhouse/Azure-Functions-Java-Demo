@@ -7,7 +7,9 @@ output "storage_account_name" {
 }
 
 output "primary_access_key" {
-  value = azurerm_storage_account.this.primary_access_key
+  description = "Primary access key - only available when shared_access_key_enabled = true"
+  value       = var.shared_access_key_enabled ? azurerm_storage_account.this.primary_access_key : null
+  sensitive   = true
 }
 
 output "resource" {

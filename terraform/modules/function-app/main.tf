@@ -24,7 +24,7 @@ resource "azurerm_windows_function_app" "fa" {
   }
 
   storage_account_name = var.function_app_config.function_app.storage_account_name
-  
+
   # Always use managed identity for storage (no access key)
   storage_account_access_key = null
 
@@ -39,7 +39,7 @@ resource "azurerm_windows_function_app" "fa" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "fa_diag" {
-  count = var.function_app_config.function_app.enable_diagnostic_settings ? 1 : 0
+  count                      = var.function_app_config.function_app.enable_diagnostic_settings ? 1 : 0
   name                       = "diag-functionapp"
   target_resource_id         = azurerm_windows_function_app.fa.id
   log_analytics_workspace_id = var.function_app_config.function_app.log_analytics_workspace_id

@@ -9,7 +9,7 @@ output "log_analytics_workspace" {
 }
 
 output "application_insights" {
-  description = "Application Insights name" 
+  description = "Application Insights name"
   value       = local.resource_names.application_insights
 }
 

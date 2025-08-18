@@ -149,7 +149,7 @@ module "function_app" {
       application_insights_type                      = var.function_app_config.function_app.application_insights_type
       application_insights_workspace_id              = module.monitoring.log_analytics_id
       storage_account_name                           = module.storage.storage_account_name
-      storage_account_access_key                     = null  # Always null for managed identity
+      storage_account_access_key                     = null # Always null for managed identity
       key_vault_reference_identity_id                = module.identity.identity_resource_id
       site_config                                    = var.function_app_config.function_app.site_config
       app_settings = merge(
@@ -231,6 +231,6 @@ resource "time_sleep" "rbac_propagation" {
     azurerm_role_assignment.identity_service_bus_receiver,
     azurerm_role_assignment.function_app_system_service_bus_sender,
     azurerm_role_assignment.function_app_system_service_bus_receiver,
-    module.storage  # Storage RBAC assignments are handled in the storage module
+    module.storage # Storage RBAC assignments are handled in the storage module
   ]
 }
